@@ -11,7 +11,7 @@ class CifarBased(nn.Module):
         self.pool = nn.MaxPool2d(3, 2)
         self.conv2 = nn.Conv2d(3, 3, 3)
         self.conv2 = nn.Conv2d(3, 3, 3)
-        self.conv2 = nn.Conv2d(3, 3, 3)
+        self.conv2 = nn.Conv2d(3, 3, 3) # maybe scrap if overfitting?
         self.pool = nn.MaxPool2d(3, 2)
         self.fc1 = nn.Linear(612, 120)
         self.fc2 = nn.Linear(120, 84)

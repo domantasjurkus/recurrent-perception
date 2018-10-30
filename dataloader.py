@@ -72,17 +72,17 @@ class GarmetDataset(Dataset):
         # images = [self.loader(os.path.join(root, f, self.image_folders[f][index])) for f in ['pant', 'shirt']]
         # image = Image.open(self.depthframe_filepaths[index])
         
-        # this works
+        # this is not sorted...
         image = io.imread(self.depthframe_filepaths[index], dtype='uint8')
         if self.masked:
             mask = io.imread(self.maskframe_filepaths[index], dtype='uint8')
             image = image*mask
 
         # works with grayscale
-        # image = np.expand_dims(image, axis=2)
+        image = np.expand_dims(image, axis=2)
 
-        if self.duplicate_channel:
-            image = np.stack((image,)*3, axis=-1)
+        # if self.duplicate_channel:
+        #     image = np.stack((image,)*3, axis=-1)
 
         # https://github.com/pytorch/vision/issues/48
         # image = np.transpose(image,(2,0,1))
