@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-# use relu?
 class CifarBased(nn.Module):
     def __init__(self, n_classes=2):
         super(CifarBased, self).__init__()
