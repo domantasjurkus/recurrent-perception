@@ -43,8 +43,8 @@ def show_image(tensor):
 #     plt.colorbar()
 #     plt.show()
 
-classes = ('pant', 'shirt', 'sweater', 'tshirt')
 # classes = ('pant', 'shirt')
+classes = ('pant', 'shirt', 'sweater', 'tshirt')
 n_classes = len(classes)
 print("n_classes =", n_classes)
 
@@ -96,14 +96,13 @@ criterion = nn.CrossEntropyLoss()
 def train():
     train_itr = train_loader
     print('training minibatch count:', len(train_itr))
-    for epoch in range(10):
+    for epoch in range(1):
         print("epoch", epoch)
         running_loss = 0.0
         for i, data in enumerate(train_itr):
             inputs, targets = data
             inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
             optimizer.zero_grad()
-            # print(targets)
 
             outputs = model(inputs)
 
@@ -126,6 +125,8 @@ def test():
     class_total = [0] * n_classes
 
     test_itr = test_loader
+    
+    confusion = torch.zeros([n_classes, n_classes], dtype=torch.int) # (class, guess)
 
     with torch.no_grad():
         for i, data in enumerate(test_itr):
@@ -133,9 +134,14 @@ def test():
             images, targets = images.to(device), targets.to(device)
 
             outputs = model(images)
-
             _, predicted_indexes = torch.max(outputs.data, 1)
-            # print(targets)
+            
+            print(len(images))
+            for i in range(len(images)):
+                actual = targets[i].item()
+                predicted = predicted_indexes[i].item()
+                print(actual, predicted)
+                confusion[actual][predicted] += 1
 
             batch_size = targets.size(0)
             total += batch_size
@@ -149,14 +155,9 @@ def test():
                 class_total[target] += 1
 
     print(class_correct)
-    print(class_total)
-
-    # Per class accuracy
-    # for i in range(n_classes):
-    #     if class_total[i] != 0:
-    #         print('Accuracy of %5s : %2d %%' % (classes[i], 100*class_correct[i] / class_total[i]))
-    
+    print(class_total)    
     print('Overall accuracy: %d %%' % (100 * correct / total))
+    print(confusion)
 
 def load_or_train():
     if os.path.exists('saved_models/model'):
