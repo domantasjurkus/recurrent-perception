@@ -26,14 +26,14 @@ WIDTH = 320
 HEIGHT = 240
 BATCH_SIZE = 128
 MASKED = True
-TEST_SPLIT = 0.2
+TEST_SPLIT = 0.5
 
 def show_image(tensor):
     # print(tensor.shape)
     # x = tensor.view(-1, HEIGHT, WIDTH)
     x = tensor.detach().numpy()
-    plt.imshow(x[...])
-    # plt.colorbar()
+    plt.imshow(x[0, ...])
+    plt.colorbar()
     plt.show()
 
 # def show_grid(minibatch):
@@ -48,14 +48,6 @@ classes = ('pant', 'shirt', 'sweater', 'tshirt')
 n_classes = len(classes)
 print("n_classes =", n_classes)
 
-# def get_training_data_iterator():
-#     folder = GarmetDataset(root='../project-data/single_folder/training', masked=MASKED)
-#     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
-
-# def get_testing_data_iterator():
-#     folder = GarmetDataset(root='../project-data/single_folder/testing', masked=MASKED)
-#     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
-
 def get_dataset_iterator():
     folder = GarmetDataset(root='../project-data/single_folder', masked=MASKED)
     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
@@ -66,7 +58,7 @@ indices = list(range(dataset_size))
 
 SHUFFLE = True
 if SHUFFLE :
-    np.random.seed(219)
+    np.random.seed(1337)
     np.random.shuffle(indices)
 
 split = int(np.floor(TEST_SPLIT*dataset_size))
@@ -78,25 +70,27 @@ train_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, sampl
 test_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, sampler=test_sampler)
 
 # cifar
-model = CifarBased(n_classes=n_classes)
+# model = CifarBased(n_classes=n_classes)
 # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-optimizer = optim.Adam(model.parameters())
-
-# resnet
-# model = ResnetBased(n_classes=n_classes)
-# optimizer = optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
+# optimizer = optim.Adam(model.parameters())
+# criterion = nn.CrossEntropyLoss()
 
 # simple
-# model = SimpleNetwork(n_classes=n_classes)
+model = SimpleNetwork(n_classes=n_classes)
 # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.Adam(model.parameters())
+criterion = nn.NLLLoss()
 
 model.to(device)
-criterion = nn.CrossEntropyLoss()
 
-def train():
+training_losses = []
+testing_losses = []
+
+torch.set_printoptions(precision=10)
+def train(epochs=10):
     train_itr = train_loader
     print('training minibatch count:', len(train_itr))
-    for epoch in range(1):
+    for epoch in range(epochs):
         print("epoch", epoch)
         running_loss = 0.0
         for i, data in enumerate(train_itr):
@@ -112,8 +106,11 @@ def train():
 
             running_loss += loss.item()
             if i % 5 == 4:
-                print('[%d, %5d] loss: %.3f' % (epoch+1, i+1, running_loss/2000))
-                running_loss = 0.0
+                print('[%d, %5d] loss: %.3f' % (epoch+1, i+1, running_loss))
+                # running_loss = 0.0
+        
+        training_losses.append(running_loss)
+        test()
 
     print('Finished Training')
     # save_model()
@@ -121,11 +118,11 @@ def train():
 def test():
     correct = 0
     total = 0
-    class_correct = [0] * n_classes
-    class_total = [0] * n_classes
+    class_correct = [0]*n_classes
+    class_total = [0]*n_classes
 
     test_itr = test_loader
-    
+    running_loss = 0.0
     confusion = torch.zeros([n_classes, n_classes], dtype=torch.int) # (class, guess)
 
     with torch.no_grad():
@@ -134,13 +131,13 @@ def test():
             images, targets = images.to(device), targets.to(device)
 
             outputs = model(images)
+            loss = criterion(outputs, targets)
+            running_loss += loss.item()
             _, predicted_indexes = torch.max(outputs.data, 1)
             
-            print(len(images))
             for i in range(len(images)):
                 actual = targets[i].item()
                 predicted = predicted_indexes[i].item()
-                print(actual, predicted)
                 confusion[actual][predicted] += 1
 
             batch_size = targets.size(0)
@@ -153,10 +150,12 @@ def test():
                 target = targets[i]
                 class_correct[target] += correct_vector[i].item()
                 class_total[target] += 1
+        
+        testing_losses.append(running_loss)
 
     print(class_correct)
     print(class_total)    
-    print('Overall accuracy: %d %%' % (100 * correct / total))
+    print('Test accuracy: %d %%' % (100 * correct / total))
     print(confusion)
 
 def load_or_train():
@@ -175,9 +174,11 @@ def save_model():
         torch.save(model.state_dict(), './saved_models/model')
         print("model saved")
 
-train()
+train(5)
+print(training_losses)
+print(testing_losses)
 # load_or_train()
-test()
+# test()
 
 # def show_topmost_resnet_params(model):
 #     k = list(model.parameters())[0]
@@ -192,5 +193,16 @@ test()
 
 # show_topmost_resnet_params(model)
 
-# training_itr = get_training_data_iterator()
-# images, labels = training_itr.next()
+# itr = get_dataset_iterator()
+# images, labels = itr.next()
+# show_image(images[0])
+
+# for plotting conv responses (for SimpleNetwork)
+# ws = list(filter(lambda l: isinstance(l, nn.modules.conv.Conv2d), model.conv.children()))
+# ws = [w.weight.data for w in ws]
+
+# grid = vutils.make_grid(ws[0], nrow=8)
+# transposed = grid.permute(1, 2, 0)
+# plt.imshow(transposed)
+# plt.colorbar()
+# plt.show()

@@ -14,6 +14,14 @@ import torchvision
 #         img = PIL.Image.open(f)
 #         return img.convert('L')
 
+# def get_training_data_iterator():
+#     folder = GarmetDataset(root='../project-data/single_folder/training', masked=MASKED)
+#     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
+
+# def get_testing_data_iterator():
+#     folder = GarmetDataset(root='../project-data/single_folder/testing', masked=MASKED)
+#     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
+
 transform = torchvision.transforms.Compose([
     torchvision.transforms.ToPILImage(),
     torchvision.transforms.Resize((240, 320)),

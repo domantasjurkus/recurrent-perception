@@ -3,6 +3,7 @@ import torchvision
 from torchvision.models import resnet18
 import torch.optim as optim
 
+# does not work with grayscale
 def ResnetBased(n_classes=2):
     # retraining the full net
     # model_ft = resnet18(pretrained=True)
