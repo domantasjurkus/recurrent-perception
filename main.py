@@ -7,14 +7,18 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import numpy as np
+import scipy
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from torch.utils.data.sampler import SubsetRandomSampler
+import cv2
 
 from dataloader import GarmetDataset
+from kinect_dataloader import KinectDataset
 from models.cifar_based import CifarBased
 from models.resnet_based import ResnetBased
 from models.simple import SimpleNetwork
@@ -26,13 +30,18 @@ WIDTH = 320
 HEIGHT = 240
 BATCH_SIZE = 128
 MASKED = True
-TEST_SPLIT = 0.5
+TEST_SPLIT = 0.3
 
-def show_image(tensor):
+def show_tensor(tensor, layer=0):
     # print(tensor.shape)
     # x = tensor.view(-1, HEIGHT, WIDTH)
     x = tensor.detach().numpy()
-    plt.imshow(x[0, ...])
+    plt.imshow(x[layer, ...])
+    plt.colorbar()
+    plt.show()
+
+def show_image(img):
+    plt.imshow(img)
     plt.colorbar()
     plt.show()
 
@@ -68,6 +77,9 @@ test_sampler = SubsetRandomSampler(test_indices)
 
 train_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, sampler=train_sampler)
 test_loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, sampler=test_sampler)
+
+kinect_dataset = KinectDataset(root='../project-data/kinect', masked=MASKED)
+kinect_loader = torch.utils.data.DataLoader(kinect_dataset, batch_size=BATCH_SIZE)
 
 # cifar
 # model = CifarBased(n_classes=n_classes)
@@ -115,18 +127,18 @@ def train(epochs=10):
     print('Finished Training')
     # save_model()
 
-def test():
+def test(loader=test_loader):
     correct = 0
     total = 0
     class_correct = [0]*n_classes
     class_total = [0]*n_classes
 
-    test_itr = test_loader
     running_loss = 0.0
     confusion = torch.zeros([n_classes, n_classes], dtype=torch.int) # (class, guess)
 
+    print('testing...')
     with torch.no_grad():
-        for i, data in enumerate(test_itr):
+        for i, data in enumerate(loader):
             images, targets = data
             images, targets = images.to(device), targets.to(device)
 
@@ -158,51 +170,40 @@ def test():
     print('Test accuracy: %d %%' % (100 * correct / total))
     print(confusion)
 
-def load_or_train():
-    if os.path.exists('saved_models/model'):
-        print('loading existing model')
-        model.load_state_dict(torch.load('saved_models/model'))
-    else:
-        train()
-
-def save_model():
-    try:
-        os.stat('saved_models')
-    except:
-        os.makedirs('saved_models')
-    if not os.path.exists('saved_models/model'):
-        torch.save(model.state_dict(), './saved_models/model')
-        print("model saved")
-
-train(5)
-print(training_losses)
-print(testing_losses)
+# train(3)
+# print(training_losses)
+# print(testing_losses)
 # load_or_train()
-# test()
+# test(kinect_loader)
+# test()    
 
-# def show_topmost_resnet_params(model):
-#     k = list(model.parameters())[0]
-#     g = vutils.make_grid(k, padding=5)
+def filter_out(img2d):
+    return list(filter(lambda pix: pix > limit, img2d))
 
-#     transposed = g.permute(1, 2, 0)
-#     transposed = transposed.data
-    
-#     plt.imshow(transposed)
-#     plt.colorbar()
-#     plt.show()
+train_itr = iter(train_loader)
+train_batch = train_itr.next()
+train_image = train_batch[0][0][0].detach().numpy()
+kinect_image = iter(kinect_loader).next()[0][0][0].detach().numpy()
+kinect_image = kinect_image.astype('uint8')
+print(train_image[100])
 
-# show_topmost_resnet_params(model)
+# This thing is giving me a headache, will use numpy implementation
+# cv2.equalizeHist(kinect_image)
 
-# itr = get_dataset_iterator()
-# images, labels = itr.next()
-# show_image(images[0])
+# clahe = cv2.createCLAHE()
+# cl1 = clahe.apply(kinect_image)
+# show_image(train_image)
 
-# for plotting conv responses (for SimpleNetwork)
-# ws = list(filter(lambda l: isinstance(l, nn.modules.conv.Conv2d), model.conv.children()))
-# ws = [w.weight.data for w in ws]
+# from util import normalise_histogram
+# normalise_histogram(train_image)
+# plt.show()
 
-# grid = vutils.make_grid(ws[0], nrow=8)
-# transposed = grid.permute(1, 2, 0)
-# plt.imshow(transposed)
-# plt.colorbar()
+# limit = 1.0/128
+# train_filtered = filter_out(train_image.ravel())
+# kinect_filtered = filter_out(kinect_image.ravel())
+# print(len(kinect_filtered))
+
+# plt.hist(train_image.ravel(), bins=256, range=(0.0, 1.0))
+# plt.show()
+# plt.hist(kinect_image.ravel(), bins=128, range=(0.0, 1.0))
 # plt.show()

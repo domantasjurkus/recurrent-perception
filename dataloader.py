@@ -9,11 +9,6 @@ import torch
 from torch.utils.data import Dataset
 import torchvision
 
-# def loader(filepath):
-#     with open(filepath, 'rb') as f:
-#         img = PIL.Image.open(f)
-#         return img.convert('L')
-
 # def get_training_data_iterator():
 #     folder = GarmetDataset(root='../project-data/single_folder/training', masked=MASKED)
 #     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
@@ -21,13 +16,6 @@ import torchvision
 # def get_testing_data_iterator():
 #     folder = GarmetDataset(root='../project-data/single_folder/testing', masked=MASKED)
 #     return iter(DataLoader(folder, batch_size=BATCH_SIZE, num_workers=4, shuffle=True))
-
-transform = torchvision.transforms.Compose([
-    torchvision.transforms.ToPILImage(),
-    torchvision.transforms.Resize((240, 320)),
-    torchvision.transforms.ToTensor(),
-    # torchvision.transforms.Normalize((0, 0, 0), (65535.0, 65535.0, 65535.0)),
-])
 
 class GarmetDataset(Dataset):
     def __init__(self, root, masked=False, duplicate_channel=False):
@@ -41,6 +29,7 @@ class GarmetDataset(Dataset):
         for folder in self.depthfolder_filepaths:
             self.depthframe_filepaths += [os.path.join(folder, filename) for filename in os.listdir(folder)]
         
+        # print(self.depthframe_filepaths)
         self.per_class_counts = [len(os.listdir(a)) for a in self.depthfolder_filepaths]
         
         if masked:
@@ -48,6 +37,14 @@ class GarmetDataset(Dataset):
             self.maskframe_filepaths = []
             for folder in self.maskfolder_filepaths:
                 self.maskframe_filepaths += [os.path.join(folder, filename) for filename in os.listdir(folder)]
+
+        self.transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToPILImage(),
+            torchvision.transforms.Resize((240, 320)),
+            torchvision.transforms.ToTensor(),
+            # for now, images are normalised individually
+            # torchvision.transforms.Normalize((0, 0, 0), (2147483647, 2147483647, 2147483647)),
+        ])
 
         # test cases
         # print(self.get_class_index(0))    # class 0
@@ -76,12 +73,7 @@ class GarmetDataset(Dataset):
         return -1
 
     def __getitem__(self, index):
-        # images = [self.loader(os.path.join(root, 'folder_{}'.format(i), self.image_folders[i][index])) for i in range(1, 9)]
-        # images = [self.loader(os.path.join(root, f, self.image_folders[f][index])) for f in ['pant', 'shirt']]
-        # image = Image.open(self.depthframe_filepaths[index])
-        
-        # this is not sorted...
-        image = io.imread(self.depthframe_filepaths[index], dtype='uint8')
+        image = io.imread(self.depthframe_filepaths[index], dtype='float32')
         if self.masked:
             mask = io.imread(self.maskframe_filepaths[index], dtype='uint8')
             image = image*mask
@@ -89,12 +81,9 @@ class GarmetDataset(Dataset):
         # works with grayscale
         image = np.expand_dims(image, axis=2)
 
-        # if self.duplicate_channel:
-        #     image = np.stack((image,)*3, axis=-1)
-
         # https://github.com/pytorch/vision/issues/48
         # image = np.transpose(image,(2,0,1))
-        image = transform(image)
+        image = self.transform(image)
         label = self.get_class_index(index)
         
         return (image, label)
