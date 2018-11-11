@@ -35,6 +35,7 @@ class GarmetDataset(Dataset):
 
         self.transform = torchvision.transforms.Compose([
             torchvision.transforms.ToPILImage(),
+            # resize otherwise run out of memory
             torchvision.transforms.Resize((240, 320)),
             torchvision.transforms.ToTensor(),
             # torchvision.transforms.Normalize([0], [0]),

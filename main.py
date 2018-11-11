@@ -28,7 +28,7 @@ print("device:", device)
 WIDTH = 320
 HEIGHT = 240
 BATCH_SIZE = 64
-MASKED = False
+MASKED = True
 SHUFFLE = True
 TEST_SPLIT = 0.9
 
@@ -207,7 +207,7 @@ def test(test_loader):
     print('Test accuracy: %d %%' % (100 * correct / total))
     print(confusion)
 
-train(xtion1_train_loader, xtion1_test_loader, 2)
+train(xtion1_train_loader, xtion1_test_loader, 10)
 print('Training losses:', training_losses)
 print('Testing losses:', testing_losses)
 # load_or_train()
