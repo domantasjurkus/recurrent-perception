@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import Dataset
 import torchvision
 
-class GarmetDataset(Dataset):
+class Xtion1Dataset(Dataset):
     def __init__(self, root, masked=False):
         self.root = os.path.join(root, 'masked' if masked else 'depth')
         self.classes = os.listdir(self.root)
@@ -82,11 +82,10 @@ class GarmetDataset(Dataset):
 
         image = io.imread(self.frame_filepaths[index], dtype='uint8')
 
-        # transform from (H, W) to (H, W, C) for a friendly format for ToPILImage
+        # transform from (H, W) to (H, W, 1) for a friendly format for ToPILImage
         image = np.expand_dims(image, axis=2)
 
         image = self.transform(image)
-        # label = self.get_class_index(index)
         label = self.labels[index]
         
         return (image, label)

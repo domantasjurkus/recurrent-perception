@@ -75,7 +75,10 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
 
                 depth = io.imread(depth_filepath, dtype='uint8')
                 mask = io.imread(mask_filepath, dtype='uint8') / 256
-                masked = np.uint8(depth * mask)
+                
+                # This cast is giving me ridges, but it's probably a hack
+                # masked = np.uint8(depth * mask)
+                masked = depth * mask
 
                 to_filepath = os.path.join(DST, 'masked', garmet, to_filename_format)
                 io.imsave(to_filepath, masked)

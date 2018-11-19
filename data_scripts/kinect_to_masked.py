@@ -3,11 +3,13 @@ import re
 import shutil
 from shutil import copyfile
 import numpy as np
-import scipy.misc
+# import scipy.misc
 from matplotlib import pyplot as plt
 
-SRC = 'kinect_sorted'
-DEST = 'kinect_masked'
+from skimage import io
+
+SRC = '../../project-data/kinect_sorted_pirstine'
+DEST = '../../project-data/kinect_masked'
 
 def make_folders(garmet):
     try:
@@ -48,7 +50,6 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
     for num in garmet_dir:
         path = os.path.join(SRC, garmet, num)
         files = os.listdir(path)
-        # print(files)
 
         depth_files = list(filter(lambda f: filename_contains(f, 'depth'), files))
         mask_files = list(filter(lambda f: filename_contains(f, 'mask'), files))
@@ -64,22 +65,39 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
             dict[i]['mask'] = os.path.join(path, mf)
 
         for gi in dict.keys():
-            gi = '10'
-            depth = scipy.misc.imread(dict[gi]['depth']) 
-            mask = scipy.misc.imread(dict[gi]['mask']) // 2
-            depth *= mask
-            depth = depth / np.max(depth)
-            
-            # plt.imshow(depth)
-            # plt.colorbar()
-            # plt.show()
+            gi = '9'
+            depth = io.imread(dict[gi]['depth'])
+            mask = io.imread(dict[gi]['mask']) // 2
 
-            depth = remobe_black(depth, n_bins=256)
+            # some image resolutions are inconsistent (yay)
+            try:
+                depth = depth * mask
+                # depth = np.uint8(depth * mask)
+                pass
+            except:
+                print('warning: garmet %s gi %s has odd resolution' % (garmet, gi))
             
-            plt.hist(depth.ravel(), bins=256, range=(0.0, 1.0))
+            mmax = np.max(depth)
+            depth = depth / mmax
+            
+            print(depth[150])
+            plt.imshow(depth)
+            plt.colorbar()
             plt.show()
 
+            # save one depth frame per class, then bother about processing everything
+            try: os.stat('../../project-data/kinect_subset/%s' % garmet)
+            except: os.mkdir('../../project-data/kinect_masked_subset/%s' % garmet)
+            scipy.misc.imsave('../../project-data/kinect_masked_subset/%s/%s.png' % (garmet, garmet), depth)
+
+            # depth = remobe_black(depth, n_bins=256)
+            
+            # plt.hist(depth.ravel(), bins=256, range=(0.0, 1.0))
+            # plt.show()
+
             break
+        break
+
         #     try:
         #         from_str = dict[gi]['depth']
         #         to_str = 'kinect/{0}/depth/{1:02}.png'.format(garmet, int(gi))

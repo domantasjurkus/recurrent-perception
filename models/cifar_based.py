@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 class CifarBased(nn.Module):
     def __init__(self, n_classes=2):
@@ -15,6 +16,9 @@ class CifarBased(nn.Module):
         self.fc1 = nn.Linear(612, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, n_classes)
+
+        self.optimizer = optim.Adam(self.parameters())
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
