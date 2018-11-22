@@ -3,7 +3,7 @@ import re
 import shutil
 from shutil import copyfile
 
-SRC = "../../project-data/Views_handparsed"
+SRC = "../../project-data/pirstine/Views_handparsed"
 DST = "../../project-data/xtion1"
 
 def make_folders(garmet):

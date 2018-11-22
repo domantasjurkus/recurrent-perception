@@ -5,7 +5,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 training_losses = []
 testing_losses = []
 
-def train(model, train_loader, test_loader, n_classes, epochs=10):
+def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
 
@@ -36,7 +36,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10):
             running_loss += loss.item()
 
             if i % 5 == 0:
-                print('epoch: %d minibatches: %d/%d loss: %.3f' % (epoch+1, i+1, minibatch_count, running_loss))
+                print('epoch: %d minibatches: %d/%d loss: %.3f' % (epoch, i, minibatch_count, running_loss))
                 running_loss = 0.0
         
         training_losses.append(total_loss)
@@ -47,7 +47,9 @@ def train(model, train_loader, test_loader, n_classes, epochs=10):
     print('Testing losses:', testing_losses)
 
     # save model
-    torch.save(model.state_dict(), "saved_models/simple_uint8_masked.pt")
+    model_name = type(model).__name__.lower()
+    is_masked = 'masked' if masked else 'unmasked'
+    torch.save(model.state_dict(), "saved_models/%s_%s_%depochs.pt" % (model_name, is_masked, epochs))
 
 def test(model, test_loader, n_classes):
     correct = 0
@@ -103,7 +105,7 @@ def test(model, test_loader, n_classes):
                 class_total[target] += 1
 
             if i % 5 == 0:
-                print('minibatches: %d/%d running loss: %.3f' % (i+1, minibatch_count, running_loss))
+                print('minibatches: %d/%d running loss: %.3f' % (i, minibatch_count, running_loss))
                 running_loss = 0.0
         
         testing_losses.append(total_loss)

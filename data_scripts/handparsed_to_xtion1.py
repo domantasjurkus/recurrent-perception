@@ -7,8 +7,8 @@ import numpy as np
 from skimage import io
 from matplotlib import pyplot as plt
 
-SRC = "../../project-data/Views_handparsed"
-DST = "../../project-data/xtion1"
+SRC = "../../project-data/pirstines/Views_handparsed"
+DST = "../../project-data/xtion1_temp"
 
 def make_folders(garmet):
     try: os.stat(DST)
@@ -73,12 +73,19 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
                 mask_filename = 'imagemask%s.png' % i
                 mask_filepath = os.path.join(move_dir, 'mask', mask_filename)
 
-                depth = io.imread(depth_filepath, dtype='uint8')
-                mask = io.imread(mask_filepath, dtype='uint8') / 256
-                
-                # This cast is giving me ridges, but it's probably a hack
-                # masked = np.uint8(depth * mask)
-                masked = depth * mask
+                depth = io.imread(depth_filepath, dtype='uint16') // 256
+                # depth = io.imread(depth_filepath) / 255
+                mask = io.imread(mask_filepath, dtype='uint8') // 255
 
+                # This uint8 cast is giving me ridges, but it's probably a hack
+                # masked = np.uint8(depth * mask)
+                
+                masked = depth * mask
+                
+                # plt.imshow(depth)
+                # plt.colorbar()
+                # plt.show()
+
+                # exit()
                 to_filepath = os.path.join(DST, 'masked', garmet, to_filename_format)
                 io.imsave(to_filepath, masked)

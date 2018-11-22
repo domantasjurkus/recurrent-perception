@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 from datasets.xtion1 import Xtion1Dataset
 from datasets.kinect import KinectDataset
 
+from models.simple import SimpleNetwork
 from models.cifar_based import CifarBased
 from models.resnet_based import ResnetBased
-from models.simple import SimpleNetwork
-from models.rnn import RNN
+# from models.rnn import RNN
 
 from train_test import *
 from util import *
@@ -40,7 +40,7 @@ print("n_classes =", n_classes)
 
 # xtion1_dataset = torchvision.datasets.ImageFolder(root='../project-data/xtion1/depth', transform=torchvision.transforms.ToTensor())
 # xtion1_dataset = torchvision.datasets.ImageFolder(root='../project-data/xtion1/depth', transform=transform)
-xtion1_dataset = Xtion1Dataset(root='../project-data/xtion1_uint8', masked=MASKED)
+xtion1_dataset = Xtion1Dataset(root='../project-data/xtion1_low_contrast', masked=MASKED)
 
 def get_train_test_samplers(dataset):
     size = len(dataset)
@@ -69,20 +69,18 @@ xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATC
 # test_image = test_image_batch[0][0]
 # show_image(test_image)
 
-# cifar
-# model = CifarBased(n_classes=n_classes)
+def get_model():
+    # model = CifarBased(n_classes=n_classes)
+    # model = SimpleNetwork(n_classes=n_classes)
+    model = ResnetBased(n_classes=n_classes)
+    
+    return model
 
-# dummy rnn
-# input_size = 240*320
-# model = RNN(input_size, n_classes=n_classes)
-
-# simple
-model = SimpleNetwork(n_classes=n_classes)
-
+model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, xtion1_train_loader, xtion1_test_loader, n_classes, 3)
+    train(model, xtion1_train_loader, xtion1_test_loader, n_classes, epochs=1, masked=MASKED)
 
     # k_dataset = KinectDataset(root='../project-data/kinect_masked_subset', masked=MASKED)
     # k_loader = torch.utils.data.DataLoader(k_dataset, batch_size=4)
