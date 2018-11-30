@@ -37,7 +37,7 @@ class SimpleNetwork(nn.Module):
             conv2(),
             conv3()
         )
-        self.classifier = nn.Linear(298304, n_classes)
+        self.classifier = nn.Linear(1210944, n_classes)
 
         self.optimizer = optim.Adam(self.parameters())
         self.criterion = nn.NLLLoss()
@@ -50,7 +50,6 @@ class SimpleNetwork(nn.Module):
         # c2 = self.conv2(c1)
         # c3 = self.conv3(c2)
         c3 = self.features(inp)
-        # features = c3.view(-1, 298304)
         features = c3.view(c3.size(0), -1)
         classes = self.classifier(features)
         return F.log_softmax(classes, dim=1)

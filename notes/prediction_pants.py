@@ -1,0 +1,22 @@
+# Show prediction 'animation'
+# for i in range(36, 51):
+#     image = cv2.imread("../project-data/xtion1_float/depth/pant/01_01_00%d.png" % i, cv2.IMREAD_GRAYSCALE)
+#     image = torch.tensor(image).float()
+#     image.unsqueeze_(0)
+#     image.unsqueeze_(0)
+#     grad_cam(image, None)
+
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 0.,  1.,  0.,  0.]])
+# Class prediction: tensor([[ 0.,  1.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 0.,  1.,  0.,  0.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])
+# Class prediction: tensor([[ 0.,  0.,  0.,  1.]])
+# Class prediction: tensor([[ 0.,  0.,  0.,  1.]])
+# Class prediction: tensor([[ 0.,  0.,  0.,  1.]])
+# Class prediction: tensor([[ 1.,  0.,  0.,  0.]])

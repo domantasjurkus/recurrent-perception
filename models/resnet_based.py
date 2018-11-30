@@ -14,14 +14,18 @@ class ResnetBased(nn.Module):
         self.model = torchvision.models.resnet18(pretrained=True)
         for param in self.model.parameters():
             param.requires_grad = False
-        
+
         # Change from 3 channels to 1
         self.model.conv1 = nn.Conv2d(1, 64, 7, 2, 3, bias=False)
+        
+        # requires_grad = True meaning we're training the 1st layer
+        # print(list(self.model.parameters())[0].requires_grad)
         
         # https://discuss.pytorch.org/t/why-torchvision-models-can-not-forward-the-input-which-has-size-of-larger-than-430-430/2067/9
         self.model.avgpool = nn.AdaptiveAvgPool2d(1)
         
         num_ftrs = self.model.fc.in_features
+        print(num_ftrs)
         self.model.fc = nn.Linear(num_ftrs, n_classes)
 
         self.optimizer = optim.Adam(self.model.fc.parameters())

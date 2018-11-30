@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 from shutil import copyfile
+import cv2
 
 import numpy as np
 from skimage import io
@@ -73,19 +74,22 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
                 mask_filename = 'imagemask%s.png' % i
                 mask_filepath = os.path.join(move_dir, 'mask', mask_filename)
 
-                depth = io.imread(depth_filepath, dtype='uint16') // 256
-                # depth = io.imread(depth_filepath) / 255
-                mask = io.imread(mask_filepath, dtype='uint8') // 255
+                # depth = io.imread(depth_filepath, dtype='float64')
+                depth = cv2.imread(depth_filepath, cv2.IMREAD_GRAYSCALE)
+                # depth = io.imread(depth_filepath) // 256
+                # mask = io.imread(mask_filepath, dtype='uint8') // 255
+                mask = cv2.imread(mask_filepath, cv2.IMREAD_GRAYSCALE)
 
                 # This uint8 cast is giving me ridges, but it's probably a hack
                 # masked = np.uint8(depth * mask)
                 
                 masked = depth * mask
                 
-                # plt.imshow(depth)
-                # plt.colorbar()
-                # plt.show()
+                print(np.max(depth))
+                plt.imshow(masked)
+                plt.colorbar()
+                plt.show()
 
-                # exit()
+                exit()
                 to_filepath = os.path.join(DST, 'masked', garmet, to_filename_format)
                 io.imsave(to_filepath, masked)

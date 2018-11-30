@@ -16,7 +16,6 @@ from datasets.kinect import KinectDataset
 from models.simple import SimpleNetwork
 from models.cifar_based import CifarBased
 from models.resnet_based import ResnetBased
-# from models.rnn import RNN
 
 from train_test import *
 from util import *
@@ -29,9 +28,9 @@ MASKED = True
 
 WIDTH = 320
 HEIGHT = 240
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 SHUFFLE = True
-TEST_SPLIT = 0.9
+TEST_SPLIT = 0.8
 
 # classes = ('pant', 'shirt')
 classes = ('pant', 'shirt', 'sweater', 'tshirt')
@@ -70,9 +69,9 @@ xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATC
 # show_image(test_image)
 
 def get_model():
-    # model = CifarBased(n_classes=n_classes)
+    model = CifarBased(n_classes=n_classes)
     # model = SimpleNetwork(n_classes=n_classes)
-    model = ResnetBased(n_classes=n_classes)
+    # model = ResnetBased(n_classes=n_classes)
     
     return model
 
@@ -80,7 +79,7 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, xtion1_train_loader, xtion1_test_loader, n_classes, epochs=1, masked=MASKED)
+    train(model, xtion1_train_loader, xtion1_test_loader, n_classes, epochs=20, masked=MASKED)
 
     # k_dataset = KinectDataset(root='../project-data/kinect_masked_subset', masked=MASKED)
     # k_loader = torch.utils.data.DataLoader(k_dataset, batch_size=4)
