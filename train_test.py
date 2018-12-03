@@ -9,11 +9,9 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
 
-    for epoch in range(epochs):
-        #  rnn
-        # hidden = model.initHidden(BATCH_SIZE)
-        # hidden = hidden.to(device)
+    TEST_LOSS_MULTIPLY = len(train_loader)/len(test_loader)
 
+    for epoch in range(epochs):
         total_loss = 0.0
         running_loss = 0.0
 
@@ -23,10 +21,6 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
             model.optimizer.zero_grad()
 
             outputs = model(inputs)
-
-            # rnn
-            # hidden = hidden[:inputs.shape[0]]
-            # outputs, hidden = model(inputs, hidden)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -40,7 +34,8 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        test(model, test_loader, n_classes)
+        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY)
+        print('Total training loss:', total_loss)
 
     print('Finished Training')
     print('Training losses:', training_losses)
@@ -51,7 +46,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
     is_masked = 'masked' if masked else 'unmasked'
     torch.save(model.state_dict(), "saved_models/%s_%s_%depochs.pt" % (model_name, is_masked, epochs))
 
-def test(model, test_loader, n_classes):
+def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
     correct = 0
     total = 0
     class_correct = [0]*n_classes
@@ -64,23 +59,14 @@ def test(model, test_loader, n_classes):
     minibatch_count = len(test_loader)
     print('testing minibatch count:', minibatch_count)
 
-    # rnn
-    # hidden = model.initHidden(BATCH_SIZE)
-    # hidden = hidden.to(device)
-
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            
             images, targets = data
             images, targets = images.to(device), targets.to(device)
 
-            # rnn
-            # hidden = hidden[:images.shape[0]]
-            # outputs, hidden = model(images, hidden)
-
             outputs = model(images)
 
-            loss = model.criterion(outputs, targets)
+            loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
             
@@ -114,3 +100,5 @@ def test(model, test_loader, n_classes):
     print('Total test samples: ', class_total)
     print('Test accuracy: %d %%' % (100 * correct / total))
     print(confusion)
+    
+    print('Total testing loss:', total_loss)

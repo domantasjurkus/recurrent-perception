@@ -25,17 +25,12 @@ class CifarBased(nn.Module):
         self.classifier = nn.Linear(45, n_classes)
 
         self.optimizer = optim.Adam(self.parameters())
+        # self.criterion = nn.NLLLoss()
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
-        # x = self.pool(F.relu(self.conv1(x)))
-        # x = self.pool(F.relu(self.conv2(x)))
-        # x = x.view(-1, 612)
-
         features = self.features(x)
         features = features.view(features.size(0), -1)
-
-        # x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
-        x = self.classifier(features)
-        return x
+        classes = self.classifier(features)
+        return classes
+        # return F.log_softmax(classes, dim=1)

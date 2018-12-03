@@ -39,17 +39,14 @@ class SimpleNetwork(nn.Module):
         )
         self.classifier = nn.Linear(1210944, n_classes)
 
-        self.optimizer = optim.Adam(self.parameters())
-        self.criterion = nn.NLLLoss()
         # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-        # optimizer = optim.Adam(model.parameters())
-        # criterion = nn.NLLLoss()
+        self.optimizer = optim.Adam(self.parameters())
+        # self.criterion = nn.NLLLoss()
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, inp):
-        # c1 = self.conv1(inp)
-        # c2 = self.conv2(c1)
-        # c3 = self.conv3(c2)
-        c3 = self.features(inp)
-        features = c3.view(c3.size(0), -1)
+        features = self.features(inp)
+        features = features.view(features.size(0), -1)
         classes = self.classifier(features)
-        return F.log_softmax(classes, dim=1)
+        # return F.log_softmax(classes, dim=1)
+        return classes
