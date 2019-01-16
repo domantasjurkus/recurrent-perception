@@ -29,6 +29,7 @@ class CifarBased(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
+        print("forward:", x.shape)
         features = self.features(x)
         features = features.view(features.size(0), -1)
         classes = self.classifier(features)

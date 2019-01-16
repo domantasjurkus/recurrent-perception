@@ -41,7 +41,6 @@ def get_train_test_samplers(dataset):
     size = len(dataset)
     indices = list(range(size))
     if SHUFFLE:
-        print("shuffle")
         np.random.seed(1337)
         np.random.shuffle(indices)
     split = int(np.floor(TEST_SPLIT*size))
@@ -51,17 +50,17 @@ def get_train_test_samplers(dataset):
     test_sampler = torch.utils.data.sampler.SubsetRandomSampler(test_indices)
     return train_sampler, test_sampler
 
-# train_sampler, test_sampler = get_train_test_samplers(xtion1_dataset)
-# xtion1_train_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATCH_SIZE, sampler=train_sampler)
-# xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATCH_SIZE, sampler=test_sampler)
+train_sampler, test_sampler = get_train_test_samplers(xtion1_dataset)
+xtion1_train_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATCH_SIZE, sampler=train_sampler)
+xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset, batch_size=BATCH_SIZE, sampler=test_sampler)
 
 # 
 # Only for the mixed approach suggested by Gerardo
 # 
-xtion1_dataset_mixed = Xtion1Dataset(root='../project-data/xtion1_mixed', masked=True)
-xtion1_dataset_test = Xtion1Dataset(root='../project-data/xtion1', masked=False)
-xtion1_train_loader = torch.utils.data.DataLoader(xtion1_dataset_mixed, batch_size=BATCH_SIZE)
-xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset_test, batch_size=BATCH_SIZE)
+# xtion1_dataset_mixed = Xtion1Dataset(root='../project-data/xtion1_mixed', masked=True)
+# xtion1_dataset_test = Xtion1Dataset(root='../project-data/xtion1', masked=False)
+# xtion1_train_loader = torch.utils.data.DataLoader(xtion1_dataset_mixed, batch_size=BATCH_SIZE)
+# xtion1_test_loader = torch.utils.data.DataLoader(xtion1_dataset_test, batch_size=BATCH_SIZE)
 
 # display a sample
 # test_image, labels = iter(xtion1_test_loader).next()[0][0]

@@ -26,8 +26,6 @@ class Xtion1Dataset(Dataset):
                 self.labels.append(self.classes.index(c))
 
         self.transform = torchvision.transforms.Compose([
-            # torchvision.transforms.ToPILImage(),
-            # torchvision.transforms.Resize((240, 320)),
             torchvision.transforms.ToTensor(),
             # we need to do the normalisation below if our data has variable brightness
             # (comes from different sources)
@@ -40,15 +38,12 @@ class Xtion1Dataset(Dataset):
             ssum += len(os.listdir(os.path.join(self.root, cclass)))
         return ssum
 
-    def __getitem__(self, index):       
+    def __getitem__(self, index):
         # image = io.imread(self.frame_filepaths[index], dtype='uint8')
         image = cv2.imread(self.frame_filepaths[index], cv2.IMREAD_GRAYSCALE)
 
-        # transform from (H, W) to (H, W, 1) for a friendly format for ToPILImage
-        # image = np.expand_dims(image, axis=2)
         image = image[:,:,None]
-
-        image = self.transform(image)        
+        image = self.transform(image)
         label = self.labels[index]
         
         return (image, label)
