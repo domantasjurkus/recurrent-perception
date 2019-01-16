@@ -44,9 +44,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
     # save model
     model_name = type(model).__name__.lower()
     is_masked = 'masked' if masked else 'unmasked'
-    # 
-    # torch.save(model.state_dict(), "saved_models/%s_%s_%depochs.pt" % (model_name, is_masked, epochs))
-    # 
+    torch.save(model.state_dict(), "saved_models/%s_%s_%depochs.pt" % (model_name, is_masked, epochs))
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
     correct = 0

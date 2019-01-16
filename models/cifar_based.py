@@ -5,6 +5,7 @@ import torch.optim as optim
 class CifarBased(nn.Module):
     def __init__(self, n_classes=4):
         super(CifarBased, self).__init__()
+        self.n_classes = n_classes
 
         self.features = nn.Sequential(
             nn.Conv2d(1, 3, kernel_size=11, stride=4),
@@ -22,14 +23,11 @@ class CifarBased(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
-        self.classifier = nn.Linear(45, n_classes)
-
+        self.classifier = nn.Linear(45, self.n_classes)
         self.optimizer = optim.Adam(self.parameters())
-        # self.criterion = nn.NLLLoss()
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
-        print("forward:", x.shape)
         features = self.features(x)
         features = features.view(features.size(0), -1)
         classes = self.classifier(features)

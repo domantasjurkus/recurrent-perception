@@ -10,8 +10,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-from continuous.datasets.xtion1 import Xtion1ContinuousDataset
-from continuous.models.cnn_lstm import CNNLSTMModel
+from datasets.xtion1continuous import Xtion1ContinuousDataset
+from models.cnn_lstm import CNNLSTMModel
+from models.cifar_based import CifarBased
 from continuous.train_test_continuous import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -20,12 +21,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 BATCH_SIZE = 8
 SHUFFLE = True
 TEST_SPLIT = 0.8
+FRAMES_PER_SEQUENCE = 6
 
 # classes = ('pant', 'shirt', 'sweater', 'tshirt')
 classes = ('pant', 'shirt')
 n_classes = len(classes)
 
-xtion1_dataset = Xtion1ContinuousDataset()
+xtion1_dataset = Xtion1ContinuousDataset(frames_per_sequence=FRAMES_PER_SEQUENCE)
 
 def are_train_and_test_indices_separated(indices1, indices2):
     "test case to make sure we're not mixing testing and training samples"
@@ -64,8 +66,9 @@ train_loader = torch.utils.data.DataLoader(xtion1_dataset, **train_params)
 test_loader = torch.utils.data.DataLoader(xtion1_dataset, **test_params)
 
 def get_model():
-    # model = CifarBased(n_classes=n_classes)
-    model = CNNLSTMModel()
+    feature_extractor = CifarBased()
+    feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_50epochs.pt'))
+    model = CNNLSTMModel(feature_extractor, n_classes)
     
     return model
 
@@ -73,4 +76,4 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, train_loader, test_loader, n_classes, epochs=1)
+    train(model, train_loader, test_loader, n_classes, epochs=10)
