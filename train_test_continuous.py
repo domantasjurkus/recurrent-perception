@@ -15,7 +15,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
     # I'm sure there are better mathsy tricks for this
     TEST_LOSS_MULTIPLY = len(train_loader)/len(test_loader)
 
-    for epoch in range(epochs):
+    for epoch in range(1, epochs+1):
         total_loss = 0.0
         running_loss = 0.0
 
@@ -41,7 +41,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
-        if epoch % 10 == 0 and epoch != 0:
+        if epoch % 5 == 0 and epoch != 1:
             save_model(model, masked, epoch)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
@@ -51,8 +51,9 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
 
 def save_model(model, masked, epoch):
     model_name = type(model).__name__.lower()
-    is_masked = 'masked' if masked else 'unmasked'
+    is_masked = 'masked' if masked else 'depth'
     torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
+    print("model saved")
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
     correct = 0
