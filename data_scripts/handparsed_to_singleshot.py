@@ -9,7 +9,7 @@ from skimage import io
 from matplotlib import pyplot as plt
 
 SRC = "../../project-data/pirstines/Views_handparsed"
-DST = "../../project-data/xtion1_temp"
+DST = "../../project-data/singleshot"
 
 def make_folders(garmet):
     try: os.stat(DST)
@@ -64,7 +64,6 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
                 if i == None:
                     print("problem with %s %d, skipping" % (move_dir, i))
                     continue
-                # print(i)
 
                 to_filename_format = "{0:02}_{1:02}_{2:04}.png".format(gi, m, int(i))
                 to_depth_str = os.path.join(DST, 'depth', garmet, to_filename_format)
@@ -85,11 +84,10 @@ for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
                 
                 masked = depth * mask
                 
-                print(np.max(depth))
-                plt.imshow(masked)
-                plt.colorbar()
-                plt.show()
+                # print(np.max(depth))
+                # plt.imshow(masked)
+                # plt.colorbar()
+                # plt.show()
 
-                exit()
                 to_filepath = os.path.join(DST, 'masked', garmet, to_filename_format)
                 io.imsave(to_filepath, masked)

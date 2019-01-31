@@ -3,27 +3,28 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 class CifarBased(nn.Module):
-    def __init__(self, n_classes=4):
+    def __init__(self, n_classes):
         super(CifarBased, self).__init__()
         self.n_classes = n_classes
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 3, kernel_size=11, stride=4),
+            nn.Conv2d(1, 12, kernel_size=11, stride=4),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
 
-            nn.Conv2d(3, 3, kernel_size=5, stride=2),
+            nn.Conv2d(12, 24, kernel_size=5, stride=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             
-            nn.Conv2d(3, 3, kernel_size=3),
-            nn.Conv2d(3, 3, kernel_size=3),
-            nn.Conv2d(3, 3, kernel_size=3), # maybe scrap if overfitting?
+            nn.Conv2d(24, 24, kernel_size=3),
+            nn.Conv2d(24, 24, kernel_size=3),
+            # nn.Conv2d(3, 3, kernel_size=3), # maybe scrap if overfitting?
             nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
-        self.classifier = nn.Linear(45, self.n_classes)
+        self.classifier = nn.Linear(576, self.n_classes)
         self.optimizer = optim.Adam(self.parameters())
         self.criterion = nn.CrossEntropyLoss()
 

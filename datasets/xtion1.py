@@ -13,11 +13,14 @@ from torch.utils.data import Dataset
 import torchvision
 
 class Xtion1Dataset(Dataset):
-    def __init__(self, root, masked=False):
-        self.root = os.path.join(root, 'masked' if masked else 'depth')
-        self.classes = os.listdir(self.root)
+    def __init__(self, root, classes, masked=False):
+        # self.root = os.path.join(root, 'masked' if masked else 'depth')
+        self.root = root
+        # self.classes = os.listdir(self.root)
+        self.classes = classes
         self.frame_filepaths = []
         self.labels = []
+        print("Xtion1Dataset classes:", self.classes)
 
         for c in self.classes:
             class_filepath = os.path.join(self.root, c)

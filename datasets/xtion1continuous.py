@@ -17,8 +17,8 @@ def append_move_filepath(move_filepath, sequence_frames):
     return list(map(lambda frame_filename: os.path.join(move_filepath, frame_filename), sequence_frames))
 
 class Xtion1ContinuousDataset(Dataset):
-    def __init__(self, frames_per_sequence):
-        self.root = '../project-data/continuous'
+    def __init__(self, root, frames_per_sequence=6):
+        self.root = root
         self.classes = os.listdir(self.root)
         self.sequence_filepaths = []
         self.labels = []

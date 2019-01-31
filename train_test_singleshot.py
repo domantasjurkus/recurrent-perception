@@ -1,17 +1,19 @@
 import torch
+import numpy as np
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 training_losses = []
 testing_losses = []
 
-def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
+def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
 
     TEST_LOSS_MULTIPLY = len(train_loader)/len(test_loader)
 
-    for epoch in range(epochs):
+    for epoch in range(1, epochs+1):
+        model.train()
         total_loss = 0.0
         running_loss = 0.0
 
@@ -37,16 +39,23 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False):
         test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY)
         print('Total training loss:', total_loss)
 
-    print('Finished Training')
-    print('Training losses:', training_losses)
-    print('Testing losses:', testing_losses)
+        if save:
+            if epoch % 10 == 0 and epoch != 0:
+                save_model(model, masked, epoch)
 
-    # save model
+        print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
+        print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
+        
+    print('Finished Training')
+
+def save_model(model, masked, epoch):
     model_name = type(model).__name__.lower()
-    is_masked = 'masked' if masked else 'unmasked'
-    torch.save(model.state_dict(), "saved_models/%s_%s_%depochs.pt" % (model_name, is_masked, epochs))
+    is_masked = 'masked' if masked else 'depth'
+    torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
+    print("saved model")
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
+    model.eval()
     correct = 0
     total = 0
     class_correct = [0]*n_classes
@@ -99,6 +108,7 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
     print('Correct predictions:', class_correct)
     print('Total test samples: ', class_total)
     print('Test accuracy: %d %%' % (100 * correct / total))
+    print('Per-class accuracy:', np.asarray(class_correct)/np.asarray(class_total))
     print(confusion)
     
     print('Total testing loss:', total_loss)

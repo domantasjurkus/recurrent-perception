@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
 all_categories = ['pant', 'shirt', 'sweater', 'tshirt']
+# all_categories = ['pant', 'shirt', 'sweater', 'towel', 'tshirt']
 
-confusion = np.array([[ 196.0,   30,   48,   40],
-        [  45,  149,   55,   72],
-        [  49,   22,  163,   51],
-        [  65,   56,   71,  154]])
+confusion = np.array([[ 299.0,   17,   15,    0],
+        [  12,  283,   42,    1],
+        [   6,   18,  250,   15],
+        [   0,    0,   11,  337]])
 
 def confusion_matrix(confusion):
     # Normalize by dividing every row by its sum
@@ -32,7 +33,7 @@ def confusion_matrix(confusion):
 
 
     for (i, j), z in np.ndenumerate(confusion):
-        ax.text(j, i, '{:0.1f}'.format(z), ha='center', va='center',
+        ax.text(j, i, '{:0.2f}'.format(z), ha='center', va='center',
                 bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
     # sphinx_gallery_thumbnail_number = 2
