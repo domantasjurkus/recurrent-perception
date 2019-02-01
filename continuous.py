@@ -18,7 +18,7 @@ from train_test_continuous import *
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 SHUFFLE = True
 TEST_SPLIT = 0.8
 FRAMES_PER_SEQUENCE = 6
@@ -86,6 +86,6 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=15, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=20, device=device)
 
     # test(model, loader_keepaway, n_classes, 1, device=device)

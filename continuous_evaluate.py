@@ -1,15 +1,16 @@
 import torch
 
-from datasets.xtion1continuous import Xtion1ContinuousDataset
+from datasets.video_evaluation import VideoEvaluationDataset
 from models.cifar_based import CifarBased
 from models.cnn_lstm import CNNLSTMModel
 
-FRAMES_PER_SEQUENCE=6
+FRAMES_PER_SEQUENCE = 6
 BATCH_SIZE = 1
+N_CLASSES = 5
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-dataset = Xtion1ContinuousDataset(root='../project-data/continuous_depth_keepaway', frames_per_sequence=FRAMES_PER_SEQUENCE)
+dataset = VideoEvaluationDataset(root='../project-data/continuous_depth_keepaway', frames_per_sequence=FRAMES_PER_SEQUENCE)
 loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, num_workers=8)
 
 def get_model():
@@ -23,14 +24,38 @@ def get_model():
 
 model = get_model()
 model.to(device)
+correct = 0
 
 with torch.no_grad():
     model.eval()
     for i, data in enumerate(loader):
-        sequences, labels = data
-        sequences, labels = sequences.to(device, dtype=torch.float), labels.to(device)
+        video, label = data
+        video, label = video.to(device, dtype=torch.float), label.to(device)
+        print("Predictions for video with label %s: " % label.item(), end="")
+        
+        n_frames = video.shape[1]
+        n_sequences = n_frames // FRAMES_PER_SEQUENCE
+        bins = torch.tensor([[0] * N_CLASSES], dtype=torch.float).to(device)
 
-        outputs = model(sequences)
-        _, predicted_indexes = torch.max(outputs.data, 1)
+        for i in range(0, n_sequences):
+            start_index = i*FRAMES_PER_SEQUENCE
+            end_index = (i+1)*FRAMES_PER_SEQUENCE
+            sequence = video[:, start_index:end_index, :, :, :]
+            
+            outputs = model(sequence)
+            # print(outputs)
+            bins += outputs
 
-        print(sequences.shape, labels, predicted_indexes)
+            # _, predicted_index = torch.max(outputs, 1)
+            # predicted_index = predicted_index.item()
+            # bins[predicted_index] += 1
+        
+        max_val, max_idx = bins.max(1)
+        predicted_id = max_idx.cpu().numpy()[0]
+        print(predicted_id, end="")
+        print(bins[0].cpu().numpy())
+
+        if label.item() == predicted_id:
+            correct += 1
+    
+    print("Total accuracy: %.1f%%" % (correct*100/dataset.__len__()))
