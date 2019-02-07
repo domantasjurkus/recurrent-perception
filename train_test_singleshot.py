@@ -1,12 +1,13 @@
 import torch
 import numpy as np
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 training_losses = []
 testing_losses = []
+accuracies = []
 
-def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False):
+def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
 
@@ -36,15 +37,16 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY)
+        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
         if save:
-            if epoch % 10 == 0 and epoch != 0:
-                save_model(model, masked, epoch)
+            # if epoch % 10 == 0 and epoch != 0:
+            save_model(model, masked, epoch)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
         print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
+        print('Accuracies:', str(accuracies).replace(",", "").replace("[", "").replace("]", ""))
         
     print('Finished Training')
 
@@ -54,7 +56,7 @@ def save_model(model, masked, epoch):
     torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
     print("saved model")
 
-def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
+def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
     model.eval()
     correct = 0
     total = 0
@@ -107,7 +109,9 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY):
 
     print('Correct predictions:', class_correct)
     print('Total test samples: ', class_total)
-    print('Test accuracy: %d %%' % (100 * correct / total))
+    acc = 100 * correct / total
+    accuracies.append(acc)
+    print('Test accuracy: %d %%' % acc)
     print('Per-class accuracy:', np.asarray(class_correct)/np.asarray(class_total))
     print(confusion)
     

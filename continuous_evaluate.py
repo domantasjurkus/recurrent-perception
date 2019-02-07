@@ -10,7 +10,7 @@ N_CLASSES = 5
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-dataset = VideoEvaluationDataset(root='../project-data/continuous_depth_keepaway', frames_per_sequence=FRAMES_PER_SEQUENCE)
+dataset = VideoEvaluationDataset(root='../project-data/continuous_depth_test', frames_per_sequence=FRAMES_PER_SEQUENCE)
 loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, num_workers=8)
 
 def get_model():

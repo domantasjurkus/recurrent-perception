@@ -9,7 +9,7 @@ from skimage import io
 from matplotlib import pyplot as plt
 
 SRC = "../../project-data/pirstines/Views_handparsed"
-DST = "../../project-data/singleshot"
+DST = "../../project-data/singleshot_full"
 
 def make_folders(garmet):
     try: os.stat(DST)
@@ -38,8 +38,7 @@ def get_number(filename):
     m = re.search(r'\d+', filename)
     return m[0] if m != None else m
 
-for garmet in ['pant', 'shirt', 'sweater', 'tshirt']:
-# for garmet in ['pant']:
+for garmet in ['pant', 'shirt', 'sweater', 'towel', 'tshirt']:
     make_folders(garmet)
     n_moves = len(os.listdir('%s/%s' % (SRC, garmet)))
     print("garmet %s has %d moves" % (garmet, n_moves))

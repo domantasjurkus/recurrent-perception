@@ -13,14 +13,13 @@ from torch.utils.data import Dataset
 import torchvision
 
 class Xtion1Dataset(Dataset):
-    def __init__(self, root, classes, masked=False):
+    def __init__(self, root, classes):
         # self.root = os.path.join(root, 'masked' if masked else 'depth')
         self.root = root
         # self.classes = os.listdir(self.root)
         self.classes = classes
         self.frame_filepaths = []
         self.labels = []
-        print("Xtion1Dataset classes:", self.classes)
 
         for c in self.classes:
             class_filepath = os.path.join(self.root, c)
@@ -34,6 +33,8 @@ class Xtion1Dataset(Dataset):
             # (comes from different sources)
             # torchvision.transforms.Normalize((np.iinfo(np.int64).max()/2,), (np.iinfo(np.int64).max,)),
         ])
+
+        print("Xtion1Dataset classes:", self.classes, " datapoints:", self.__len__())
 
     def __len__(self):
         ssum = 0

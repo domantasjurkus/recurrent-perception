@@ -5,8 +5,9 @@ import torch
 
 training_losses = []
 testing_losses = []
+accuracies = []
 
-def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, device="cpu"):
+def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
     print("device:", device)
@@ -41,11 +42,13 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
-        if epoch % 5 == 0 and epoch != 1:
+        # if epoch % 5 == 0 and epoch != 1:
+        if save:
             save_model(model, masked, epoch)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
         print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
+        print('Accuracies:', str(accuracies).replace(",", "").replace("[", "").replace("]", ""))
 
     print('Finished Training')
 
@@ -107,7 +110,9 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     print('Total test samples: ', class_total)
     print('Correct predictions:', class_correct)
-    print('Test accuracy: %d %%' % (100 * correct / total))
+    acc = 100 * correct / total
+    accuracies.append(acc)
+    print('Test accuracy: %d %%' % acc)
     print(confusion)
     
     print('Total testing loss:', total_loss)
