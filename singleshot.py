@@ -27,13 +27,13 @@ print("device:", device)
 MASKED = False
 SHUFFLE = True
 BATCH_SIZE = 64
-TEST_SPLIT = 0.8
+# TEST_SPLIT = 0.8
 
 ROOT_TRAIN = '../project-data/singleshot_%s' % ("masked" if MASKED else "depth")
 ROOT_TEST = '../project-data/singleshot_%s_test' % ("masked" if MASKED else "depth")
 
-classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
-# classes = ('pant', 'shirt', 'sweater', 'tshirt')
+# classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
+classes = ('pant', 'shirt', 'sweater', 'tshirt')
 n_classes = len(classes)
 print("n_classes =", n_classes)
 
@@ -63,6 +63,6 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, train_loader, test_loader, n_classes, epochs=20, masked=MASKED, save=True, device=device)
+    train(model, train_loader, test_loader, n_classes, epochs=50, masked=MASKED, save=True, device=device)
 
     # test(model, keepaway_loader, n_classes, 1, device=device)

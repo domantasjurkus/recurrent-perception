@@ -15,8 +15,6 @@ from models.cnn_lstm import CNNLSTMModel
 from models.cifar_based import CifarBased
 from train_test_continuous import *
 
-torch.manual_seed(1337)
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 
@@ -52,13 +50,6 @@ loader_test = torch.utils.data.DataLoader(dataset_test, **test_params)
 def get_model():
     feature_extractor = CifarBased(n_classes=n_classes)
     feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_depth_epoch10.pt'))
-    
-    # freeze parameters for debugging - model should perform much worse (doesn't work for now)
-    # for param in feature_extractor.parameters():
-    #     try:
-    #         param.requires_grad = False
-    #     except:
-    #         print("warn: not freezing ", param)
 
     model = CNNLSTMModel(feature_extractor, n_classes)
     

@@ -194,7 +194,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-cuda', action='store_true', default=False,
                         help='Use NVIDIA GPU acceleration')
-    parser.add_argument('--image-path', type=str, default='../project-data/singleshot_depth_test/pant/03_01_0056.png', help='Input image path')
+    parser.add_argument('--image-path', type=str, default='../project-data/singleshot_depth_test/pant/03_01_0054.png', help='Input image path')
     args = parser.parse_args()
     args.use_cuda = args.use_cuda and torch.cuda.is_available()
     if args.use_cuda:
@@ -218,10 +218,10 @@ if __name__ == '__main__':
     # feature method, and a classifier method,
     # as in the VGG models in torchvision.
     # grad_cam = GradCam(model=models.vgg19(pretrained=True), target_layer_names=["34"], use_cuda=args.use_cuda)
-    model = CifarBased(n_classes=5)
-    model.load_state_dict(torch.load('saved_models/cifarbased_depth_epoch10.pt'))
+    model = CifarBased(n_classes=4)
+    model.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch10.pt'))
 
-    grad_cam = GradCam(model=model, target_layer_names=["7"], use_cuda=args.use_cuda)
+    grad_cam = GradCam(model=model, target_layer_names=["3"], use_cuda=args.use_cuda)
 
     img = cv2.imread(args.image_path, 0)
     # img = np.float32(cv2.resize(img, (224, 224))) / 255
@@ -242,7 +242,6 @@ if __name__ == '__main__':
     target_index = None
     # target_index = 281
 
-    # input is normalised
     mask = grad_cam(img, target_index)
     plt.imshow(mask)
     plt.colorbar()

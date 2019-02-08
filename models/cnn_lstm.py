@@ -7,10 +7,19 @@ class CNNLSTMModel(nn.Module):
     def __init__(self, feature_extractor, n_classes, lstm_hidden_size=128):
         super(CNNLSTMModel, self).__init__()
         self.feature_extractor = feature_extractor
-        self.lstm = nn.LSTM(input_size=n_classes, hidden_size=lstm_hidden_size, num_layers=3, batch_first=True)
+        # self.lstm = nn.LSTM(input_size=n_classes, hidden_size=lstm_hidden_size, num_layers=3, batch_first=True)
+        self.lstm = nn.GRU(input_size=n_classes, hidden_size=lstm_hidden_size, num_layers=3, batch_first=True)
         
         self.classifier = nn.Linear(128, n_classes)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
+
+        # freeze parameters for debugging - model should perform much worse
+        for param in self.feature_extractor.parameters():
+            try:
+                param.requires_grad = False
+            except:
+                print("warn: not freezing ", param)
+
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
