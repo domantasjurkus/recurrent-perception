@@ -16,7 +16,7 @@ import torchvision
 def append_move_filepath(move_filepath, sequence_frames):
     return list(map(lambda frame_filename: os.path.join(move_filepath, frame_filename), sequence_frames))
 
-class Xtion1ContinuousDataset(Dataset):
+class Xtion1SnippetsDataset(Dataset):
     def __init__(self, root, frames_per_sequence):
         self.root = root
         self.classes = os.listdir(self.root)

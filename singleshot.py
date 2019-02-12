@@ -24,7 +24,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 print("device:", device)
 
-MASKED = False
+MASKED = True
 SHUFFLE = True
 BATCH_SIZE = 64
 # TEST_SPLIT = 0.8
@@ -32,8 +32,8 @@ BATCH_SIZE = 64
 ROOT_TRAIN = '../project-data/singleshot_%s' % ("masked" if MASKED else "depth")
 ROOT_TEST = '../project-data/singleshot_%s_test' % ("masked" if MASKED else "depth")
 
-# classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
-classes = ('pant', 'shirt', 'sweater', 'tshirt')
+# classes = ('pant', 'shirt', 'sweater', 'tshirt')
+classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
 n_classes = len(classes)
 print("n_classes =", n_classes)
 

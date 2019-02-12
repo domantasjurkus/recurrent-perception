@@ -24,6 +24,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
             inputs, targets = data
             inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
+            # print(inputs.shape)
 
             outputs = model(inputs)
 
