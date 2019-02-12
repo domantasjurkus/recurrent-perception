@@ -58,10 +58,6 @@ class Xtion1VideoDataset(Dataset):
 
         video = torch.zeros((self.longest_video, 1, 480, 640))
         video[:len(frames)] = torch.Tensor(frames)
-        # seq_tensor = torch.zeros((len(vectorized_seqs), seq_lengths.max())).long().cuda()
-        # for idx, (seq, seqlen) in enumerate(zip(vectorized_seqs, seq_lengths)):
-            # seq_tensor[idx, :seqlen] = torch.LongTensor(seq)
 
-        # video = torch.tensor(video)
         label = self.labels[index]        
         return (video, label)
