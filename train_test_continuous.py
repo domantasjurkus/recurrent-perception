@@ -21,12 +21,11 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         running_loss = 0.0
 
         for i, data in enumerate(train_loader):
-            inputs, targets = data
+            inputs, targets, video_lengths = data
             inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
-            # print(inputs.shape)
 
-            outputs = model(inputs)
+            outputs = model(inputs, video_lengths)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -74,10 +73,10 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            images, targets = data
+            images, targets, video_lengths = data
             images, targets = images.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = model(images)
+            outputs = model(images, video_lengths)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()

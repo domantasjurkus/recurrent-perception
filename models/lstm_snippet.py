@@ -32,13 +32,11 @@ class LSTMSnippet(nn.Module):
         # pack them up nicely
         # packed_input = pack_padded_sequence(r_in, seq_lengths.cpu().numpy(), batch_first=True)
         
-        # What I am doing
-        r_out, _ = self.lstm(r_in)
-        
-        # What I feel I should be doing
-        # r_out, HIDDEN_OUTPUT = self.lstm(r_in, HIDDEN_OUTPUT)
+        # output of shape (seq_len, batch, num_directions * hidden_size):
+        output, _ = self.lstm(r_in)
 
         # Save prediction from last LSTM output
-        classes = self.classifier(r_out[:, -1, :])
-        softmax = F.log_softmax(classes, dim=1)
-        return softmax
+        classes = self.classifier(output[:, -1, :])
+        # softmax = F.log_softmax(classes, dim=1)
+        # return softmax
+        return classes
