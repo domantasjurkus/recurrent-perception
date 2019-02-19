@@ -18,10 +18,9 @@ class CifarBased(nn.Module):
             
             nn.Conv2d(24, 24, kernel_size=3),
             nn.Conv2d(24, 24, kernel_size=3),
-            # nn.Conv2d(3, 3, kernel_size=3), # maybe scrap if overfitting?
             nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Dropout(p=0.5),
-            nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
         self.classifier = nn.Linear(576, self.n_classes)
