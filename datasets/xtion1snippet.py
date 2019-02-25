@@ -1,13 +1,7 @@
 import os
 import PIL
 import numpy as np
-from scipy import misc
-import skimage
-from skimage import io, transform
-from PIL import Image
-import matplotlib.pyplot as plt
 import cv2
-import time
 
 import torch
 from torch.utils.data import Dataset
@@ -56,5 +50,5 @@ class Xtion1SnippetDataset(Dataset):
         sequence = list(map(self.filepath_to_image, sequence))
         sequence = np.asarray(sequence)
         sequence = torch.tensor(sequence)
-        label = self.labels[index]        
+        label = self.labels[index]   
         return (sequence, label)

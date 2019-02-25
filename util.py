@@ -1,6 +1,4 @@
 import numpy as np
-# import cv2
-from matplotlib import pyplot as plt
 
 def load_or_train():
     if os.path.exists('saved_models/model'):

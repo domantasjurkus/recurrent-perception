@@ -1,30 +1,23 @@
 import os
-import PIL
 import torch
 import torchvision
 import torchvision.utils as vutils
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 
 from datasets.xtion1 import Xtion1Dataset
-from datasets.kinect import KinectDataset
-
 from models.simple import SimpleNetwork
 from models.cifar_based import CifarBased
 from models.resnet_based import ResnetBased
 from train_test_singleshot import *
-from util import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 print("device:", device)
 
-MASKED = True
+MASKED = False
 SHUFFLE = True
 BATCH_SIZE = 64
 # TEST_SPLIT = 0.8

@@ -3,7 +3,6 @@ import PIL
 import numpy as np
 from scipy import misc
 import skimage
-from skimage import io, transform
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2

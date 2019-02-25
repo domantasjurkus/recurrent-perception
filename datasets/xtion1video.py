@@ -1,13 +1,7 @@
 import os
 import PIL
 import numpy as np
-from scipy import misc
-import skimage
-from skimage import io, transform
-from PIL import Image
-import matplotlib.pyplot as plt
 import cv2
-import time
 
 import torch
 from torch.utils.data import Dataset
@@ -40,7 +34,6 @@ class Xtion1VideoDataset(Dataset):
         self.transform = torchvision.transforms.Compose([
             torchvision.transforms.ToTensor(),
         ])
-
 
     def __len__(self):
         return len(self.video_filepaths)
