@@ -8,47 +8,36 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 
 from datasets.xtion1 import Xtion1Dataset
-from models.simple import SimpleNetwork
 from models.cifar_based import CifarBased
-from models.resnet_based import ResnetBased
-from train_test_singleshot import *
+from train_test import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 print("device:", device)
 
-MASKED = False
+MASKED = True
 SHUFFLE = True
 BATCH_SIZE = 64
-# TEST_SPLIT = 0.8
 
+# ROOT_TRAIN = '../project-data/singleshot_%s_resized' % ("masked" if MASKED else "depth")
+# ROOT_TEST = '../project-data/singleshot_%s_test_resized' % ("masked" if MASKED else "depth")
 ROOT_TRAIN = '../project-data/singleshot_%s' % ("masked" if MASKED else "depth")
 ROOT_TEST = '../project-data/singleshot_%s_test' % ("masked" if MASKED else "depth")
 
-# classes = ('pant', 'shirt', 'sweater', 'tshirt')
+
 classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
 n_classes = len(classes)
 print("n_classes =", n_classes)
 
 dataset_train = Xtion1Dataset(root=ROOT_TRAIN, classes=classes)
 dataset_test = Xtion1Dataset(root=ROOT_TEST, classes=classes)
-# keepaway_dataset = Xtion1Dataset(root='../project-data/singleshot_depth_keepaway', classes=classes, masked=MASKED)
 
-# train_sampler, test_sampler = get_train_test_samplers(dataset_train)
-# train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=BATCH_SIZE, sampler=train_sampler)
 train_loader = torch.utils.data.DataLoader(dataset_train, shuffle=True, batch_size=BATCH_SIZE)
-
-# test_loader = torch.utils.data.DataLoader(dataset_train, batch_size=BATCH_SIZE, sampler=test_sampler)
 test_loader = torch.utils.data.DataLoader(dataset_test, shuffle=True, batch_size=BATCH_SIZE)
-
-# keepaway_loader = torch.utils.data.DataLoader(keepaway_dataset, batch_size=BATCH_SIZE)
 
 def get_model():
     model = CifarBased(n_classes=n_classes)
     # model.load_state_dict(torch.load('saved_models/cifarbased_unmasked_epoch20.pt'))
-    # model = SimpleNetwork(n_classes=n_classes)
-    # model = ResnetBased(n_classes=n_classes)
-    # model = UPCFeatureExtractor(n_classes=n_classes)
     
     return model
 

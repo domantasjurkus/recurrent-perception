@@ -1,9 +1,6 @@
 import torch
 import numpy as np
 
-
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 training_losses = []
 testing_losses = []
 accuracies = []
@@ -38,12 +35,11 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        acccuracy = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
         if save:
-            # if epoch % 10 == 0 and epoch != 0:
-            save_model(model, masked, epoch)
+            save_model(model, masked, epoch, acccuracy)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
         print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
@@ -51,11 +47,12 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         
     print('Finished Training')
 
-def save_model(model, masked, epoch):
+def save_model(model, masked, epoch, acccuracy):
     model_name = type(model).__name__.lower()
     is_masked = 'masked' if masked else 'depth'
-    torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
-    print("saved model")
+    model_string = "saved_models/%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, acccuracy)
+    torch.save(model.state_dict(), model_string)
+    print("saved model", model_string)
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
     model.eval()
@@ -74,7 +71,7 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
     with torch.no_grad():
         for i, data in enumerate(test_loader):
             images, targets = data
-            images, targets = images.to(device), targets.to(device)
+            images, targets = images.to(device, dtype=torch.float), targets.to(device)
 
             outputs = model(images)
 
@@ -110,10 +107,11 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     print('Correct predictions:', class_correct)
     print('Total test samples: ', class_total)
-    acc = 100 * correct / total
+    acc = correct / total
     accuracies.append(acc)
-    print('Test accuracy: %d %%' % acc)
+    print('Test accuracy: %f' % acc)
     print('Per-class accuracy:', np.asarray(class_correct)/np.asarray(class_total))
     print(confusion)
     
     print('Total testing loss:', total_loss)
+    return acc

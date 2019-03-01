@@ -49,11 +49,19 @@ class Xtion1VideoDataset(Dataset):
         frames = list(map(self.filepath_to_image, video))
         frames = np.asarray(frames)
 
-        # padd with 0s if training with batch_size>1
-        # video = torch.zeros((self.longest_video, 1, 480, 640))
-        # video[:len(frames)] = torch.Tensor(frames)
+        # padd with 0s
+        # sorry for the hardcode (⌐■_■)
+        video = torch.zeros((self.longest_video, 1, 480, 640))
+        video[:len(frames)] = torch.Tensor(frames)
+        video = torch.Tensor(video)
 
-        video = torch.Tensor(frames)
+        # Do not pad
+        # video = torch.Tensor(frames)
 
-        label = self.labels[index]        
+        # repeat last frame throughout padded frames
+        # last_frame = video[len(frames)-1]
+        # for i in range(len(frames), self.longest_video):
+        #     video[i] = last_frame
+
+        label = self.labels[index]
         return (video, label, len(frames))

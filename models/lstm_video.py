@@ -9,21 +9,14 @@ class LSTMVideo(nn.Module):
         super(LSTMVideo, self).__init__()
         self.feature_extractor = feature_extractor
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
-        # self.lstm = nn.GRU(input_size=n_classes, hidden_size=lstm_hidden_size, num_layers=3, batch_first=True)
         
         self.classifier = nn.Linear(128, n_classes)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
 
-        # freeze parameters for debugging - model should perform much worse
-        # for param in self.feature_extractor.parameters():
-        #     try:
-        #         param.requires_grad = False
-        #     except:
-        #         print("warn: not freezing ", param)
-
+        # self.criterion = nn.NLLLoss()
         self.criterion = nn.CrossEntropyLoss()
 
-    def forward(self, x, video_lengths):
+    def forward(self, x, video_lengths, output_cell=-1):
         samples, timesteps, c, h, w = x.size()
         c_in = x.view(samples*timesteps, c, h, w)
 

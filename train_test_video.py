@@ -1,7 +1,5 @@
 import torch
-
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
+import numpy as np
 
 training_losses = []
 testing_losses = []
@@ -12,20 +10,19 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
     print('training minibatch count:', minibatch_count)
     print("device:", device)
 
-    # TEST_LOSS_MULTIPLY is only used for making the training and testing errors comparable
-    # I'm sure there are better mathsy tricks for this
     TEST_LOSS_MULTIPLY = len(train_loader)/len(test_loader)
 
     for epoch in range(1, epochs+1):
+        model.train()
         total_loss = 0.0
         running_loss = 0.0
 
         for i, data in enumerate(train_loader):
-            inputs, targets, video_lengths = data
-            inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
+            videos, targets, video_lengths = data
+            videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
 
-            outputs = model(inputs, video_lengths)
+            outputs = model(videos, video_lengths)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -39,12 +36,11 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        acc = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
-        # if epoch % 5 == 0 and epoch != 1:
         if save:
-            save_model(model, masked, epoch)
+            save_model(model, masked, epoch, acc)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
         print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
@@ -52,13 +48,14 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
 
     print('Finished Training')
 
-def save_model(model, masked, epoch):
+def save_model(model, masked, epoch, acc):
     model_name = type(model).__name__.lower()
     is_masked = 'masked' if masked else 'depth'
-    torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
+    torch.save(model.state_dict(), "saved_models/video_%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, acc))
     print("model saved")
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
+    model.eval()
     correct = 0
     total = 0
     class_correct = [0]*n_classes
@@ -73,10 +70,10 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            images, targets, video_lengths = data
-            images, targets = images.to(device, dtype=torch.float), targets.to(device)
+            videos, targets, video_lengths = data
+            videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = model(images, video_lengths)
+            outputs = model(videos, video_lengths)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
@@ -85,7 +82,7 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
             _, predicted_indexes = torch.max(outputs.data, 1)
             
             # bin predictions into confusion matrix
-            for j in range(len(images)):
+            for j in range(len(videos)):
                 actual = targets[j].item()
                 predicted = predicted_indexes[j].item()
                 confusion[actual][predicted] += 1
@@ -110,9 +107,9 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     print('Total test samples: ', class_total)
     print('Correct predictions:', class_correct)
-    acc = 100 * correct / total
+    acc = correct / total
     accuracies.append(acc)
-    print('Test accuracy: %d %%' % acc)
+    print('Test accuracy: %f' % acc)
     print(confusion)
-    
     print('Total testing loss:', total_loss)
+    return acc

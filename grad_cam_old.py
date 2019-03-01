@@ -7,7 +7,7 @@ import cv2
 import sys
 import numpy as np
 import argparse
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from models.cifar_based import CifarBased
 
@@ -66,13 +66,13 @@ def preprocess_image(img):
     input = Variable(preprocessed_img, requires_grad = True)
     return input
 
-def show_cam_on_image(img, mask):
+def show_cam_on_image(img, mask, filename="nofilename"):
     heatmap = cv2.applyColorMap(np.uint8(255*mask), cv2.COLORMAP_JET)
     # heatmap = np.float32(heatmap) / 255
     heatmap = np.float32(heatmap)
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
-    cv2.imwrite("cam.jpg", np.uint8(255 * cam))
+    cv2.imwrite("%s.jpg" % filename, np.uint8(255 * cam))
 
 class GradCam:
     def __init__(self, model, target_layer_names, use_cuda):
@@ -122,9 +122,10 @@ class GradCam:
         for i, w in enumerate(weights):
             cam += w * target[i, :, :]
 
+
         cam = np.maximum(cam, 0)
         # cam = cv2.resize(cam, (224, 224))
-        cam = cv2.resize(cam, (480, 640))
+        cam = cv2.resize(cam, (640, 480))
         cam = cam - np.min(cam)
         cam = cam / np.max(cam)
         return cam
@@ -194,7 +195,10 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-cuda', action='store_true', default=False,
                         help='Use NVIDIA GPU acceleration')
-    parser.add_argument('--image-path', type=str, default='../project-data/singleshot_depth_test/pant/pant3_move1_0055.png', help='Input image path')
+
+    parser.add_argument('--image-path', type=str, default='../project-data/singleshot_depth_test/pant/pant3_move1_0057.png', help='Input image path')
+    # parser.add_argument('--image-path', type=str, default='../project-data/singleshot_masked_test/pant/pant3_move1_0050.png', help='Input image path')
+
     args = parser.parse_args()
     args.use_cuda = args.use_cuda and torch.cuda.is_available()
     if args.use_cuda:
@@ -203,6 +207,33 @@ def get_args():
         print("Using CPU for computation")
 
     return args
+
+def save_single_cam(batch_img, target_layer):
+    grad_cam = GradCam(model=model, target_layer_names=[str(target_layer)], use_cuda=args.use_cuda)
+
+    img = batch_img.clone()
+    img.unsqueeze_(0)
+    img.unsqueeze_(0)
+
+    # If None, returns the map for the highest scoring category.
+    # Otherwise, targets the requested index.
+    target_index = None
+    # target_index = 281
+
+    mask = grad_cam(img, target_index)
+
+    img.squeeze_(0)
+    img.squeeze_(0)
+
+    # mask = mask.transpose(1, 0)
+    # plt.imshow(mask)
+    # plt.colorbar()
+    # plt.show()
+
+    # img = img.permute(1, 0)
+    img.unsqueeze_(2)
+    img = img.repeat(1, 1, 3)
+    show_cam_on_image(img, mask, "depth_%d" % target_layer)
 
 if __name__ == '__main__':
     """ python grad_cam.py <path_to_image>
@@ -219,40 +250,19 @@ if __name__ == '__main__':
     # as in the VGG models in torchvision.
     # grad_cam = GradCam(model=models.vgg19(pretrained=True), target_layer_names=["34"], use_cuda=args.use_cuda)
     model = CifarBased(n_classes=5)
-    model.load_state_dict(torch.load('saved_models/cifarbased_depth_epoch15.pt'))
+    model.load_state_dict(torch.load('saved_models/cifarbased_depth_epoch5_acc89.140768.pt'))
+    # model.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch19_acc38.793419.pt'))
     model.eval()
-
-    grad_cam = GradCam(model=model, target_layer_names=["8"], use_cuda=args.use_cuda)
 
     img = cv2.imread(args.image_path, 0)
     # img = np.float32(cv2.resize(img, (224, 224))) / 255
     img = torch.Tensor(img)
-    img.unsqueeze_(0)
-    img.unsqueeze_(0)
     # input = preprocess_image(img)
 
-    # If None, returns the map for the highest scoring category.
-    # Otherwise, targets the requested index.
-    target_index = None
-    # target_index = 281
-
-    mask = grad_cam(img, target_index)
-    mask = mask.transpose(1, 0)
-    # plt.imshow(mask)
-    # plt.colorbar()
-    # plt.show()
-
-    img.squeeze_(0)
-    img.squeeze_(0)
-    # img = img.permute(1, 0)
-    img.unsqueeze_(2)
-    img = img.repeat(1, 1, 3)
-    print(img.shape)
-    print(mask.shape)
-    show_cam_on_image(img, mask)
+    for target_layer in range(1, 9+1):
+        save_single_cam(img, target_layer)
 
     # guided back-propagation which is a bonus
-
     # gb_model = GuidedBackpropReLUModel(model = models.vgg19(pretrained=True), use_cuda=args.use_cuda)
     # gb_model = GuidedBackpropReLUModel(model=model, use_cuda=args.use_cuda)
     # gb = gb_model(input, index=target_index)

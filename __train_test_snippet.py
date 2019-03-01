@@ -1,7 +1,5 @@
 import torch
-
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
+import numpy as np
 
 training_losses = []
 testing_losses = []
@@ -10,10 +8,8 @@ accuracies = []
 def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
-    print("device:", device)
+    model.train()
 
-    # TEST_LOSS_MULTIPLY is only used for making the training and testing errors comparable
-    # I'm sure there are better mathsy tricks for this
     TEST_LOSS_MULTIPLY = len(train_loader)/len(test_loader)
 
     for epoch in range(1, epochs+1):
@@ -39,12 +35,11 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        acc = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
-
-        # if epoch % 5 == 0 and epoch != 1:
+``
         if save:
-            save_model(model, masked, epoch)
+            save_model(model, masked, epoch, acc)
 
         print('Training losses:', str(training_losses).replace(",", "").replace("[", "").replace("]", ""))
         print('Testing losses:', str(testing_losses).replace(",", "").replace("[", "").replace("]", ""))
@@ -52,10 +47,10 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
 
     print('Finished Training')
 
-def save_model(model, masked, epoch):
+def save_model(model, masked, epoch, accuracy):
     model_name = type(model).__name__.lower()
     is_masked = 'masked' if masked else 'depth'
-    torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d.pt" % (model_name, is_masked, epoch))
+    torch.save(model.state_dict(), "saved_models/snippet_%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, accuracy))
     print("model saved")
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
@@ -110,9 +105,9 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     print('Total test samples: ', class_total)
     print('Correct predictions:', class_correct)
-    acc = 100 * correct / total
+    acc = correct / total
     accuracies.append(acc)
-    print('Test accuracy: %d %%' % acc)
+    print('Test accuracy: %f' % acc)
     print(confusion)
-    
     print('Total testing loss:', total_loss)
+    return acc
