@@ -6,7 +6,7 @@ import random
 
 from datasets.xtion1video import Xtion1VideoDataset
 from models.cifar_based import CifarBased
-from models.lstm_video import LSTMVideo
+from models.lstm_singleshot import LSTMSingleshot
 from train_test_video import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -41,11 +41,11 @@ def get_model():
     feature_extractor = CifarBased(n_classes=n_classes)
     feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
 
-    model = LSTMVideo(feature_extractor.features, n_classes)
+    model = LSTMSingleshot(feature_extractor.features, n_classes)
     return model
 
 model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=100, save=True, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device)

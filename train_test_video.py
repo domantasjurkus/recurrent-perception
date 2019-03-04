@@ -51,7 +51,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
 def save_model(model, masked, epoch, acc):
     model_name = type(model).__name__.lower()
     is_masked = 'masked' if masked else 'depth'
-    torch.save(model.state_dict(), "saved_models/video_%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, acc))
+    torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, acc))
     print("model saved")
 
 def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):

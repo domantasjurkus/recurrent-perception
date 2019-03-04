@@ -50,13 +50,12 @@ class Xtion1VideoDataset(Dataset):
         frames = np.asarray(frames)
 
         # padd with 0s
-        # sorry for the hardcode (⌐■_■)
-        video = torch.zeros((self.longest_video, 1, 480, 640))
-        video[:len(frames)] = torch.Tensor(frames)
-        video = torch.Tensor(video)
+        # video = torch.zeros((self.longest_video, 1, 480, 640))
+        # video[:len(frames)] = torch.Tensor(frames)
+        # video = torch.Tensor(video)
 
         # Do not pad
-        # video = torch.Tensor(frames)
+        video = torch.Tensor(frames)
 
         # repeat last frame throughout padded frames
         # last_frame = video[len(frames)-1]

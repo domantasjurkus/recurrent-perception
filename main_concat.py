@@ -2,7 +2,6 @@ import torch
 
 from datasets.xtion1snippet import Xtion1SnippetDataset
 from models.snippet_concat import SnippetConcat # Features
-from models.lstm_video_concat import LSTMVideoConcat # LSTM + classifier
 
 from train_test import *
 
@@ -43,4 +42,4 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=100, save=True, masked=True, device=device)
