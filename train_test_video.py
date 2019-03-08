@@ -110,6 +110,7 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
     acc = correct / total
     accuracies.append(acc)
     print('Test accuracy: %f' % acc)
+    print('Per-class accuracy:', np.asarray(class_correct)/np.asarray(class_total))
     print(confusion)
     print('Total testing loss:', total_loss)
     return acc

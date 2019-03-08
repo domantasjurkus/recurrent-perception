@@ -38,10 +38,11 @@ loader_train = torch.utils.data.DataLoader(dataset_train, **train_params)
 loader_test = torch.utils.data.DataLoader(dataset_test, **test_params)
 
 def get_model():
-    feature_extractor = CifarBased(n_classes=n_classes)
-    feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
+    # feature_extractor = CifarBased(n_classes=n_classes)
+    # feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
 
-    model = LSTMSingleshot(feature_extractor.features, n_classes)
+    # model = LSTMSingleshot(feature_extractor.features, n_classes)
+    model = LSTMSingleshot(n_classes)
     return model
 
 model = get_model()

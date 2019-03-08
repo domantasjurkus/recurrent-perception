@@ -19,10 +19,10 @@ def get_feature_extractor():
         nn.MaxPool2d(kernel_size=3, stride=2),
     )
 
-class LSTMSnippet(nn.Module):
+class LSTMSnippet2(nn.Module):
     # def __init__(self, feature_extractor, n_classes=5, n_visual_features=576, lstm_hidden_size=128):
     def __init__(self, n_classes=5, n_visual_features=576, lstm_hidden_size=128):
-        super(LSTMSnippet, self).__init__()
+        super(LSTMSnippet2, self).__init__()
         self.feature_extractor = get_feature_extractor()
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         
@@ -39,7 +39,6 @@ class LSTMSnippet(nn.Module):
         
         output, _ = self.lstm(r_in)
 
-        # Save prediction from last LSTM output BAD BAD BAD
-        classes = self.classifier(output[:, -1, :])
+        classes = self.classifier(output[:, :, :])
         softmax = F.log_softmax(classes, dim=1)
         return softmax

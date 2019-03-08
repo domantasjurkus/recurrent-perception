@@ -45,6 +45,6 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, train_loader, test_loader, n_classes, epochs=50, masked=MASKED, save=True, device=device)
+    train(model, train_loader, test_loader, n_classes, epochs=50, masked=MASKED, save=False, device=device)
 
     # test(model, keepaway_loader, n_classes, 1, device=device)

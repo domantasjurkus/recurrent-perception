@@ -57,9 +57,7 @@ class SnippetConcat(nn.Module):
 
     def forward(self, x):
         post = self.features(x)
-
         classes = self.classifier(post)
 
         softmax = F.log_softmax(classes, dim=1)
-        # print(F.softmax(classes, dim=1))
         return softmax

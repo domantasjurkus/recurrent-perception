@@ -42,4 +42,4 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=100, save=True, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=50, save=True, masked=True, device=device)
