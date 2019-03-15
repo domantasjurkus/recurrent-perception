@@ -18,11 +18,11 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         running_loss = 0.0
 
         for i, data in enumerate(train_loader):
-            videos, targets, video_lengths = data
+            videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
 
-            outputs = model(videos, video_lengths)
+            outputs = model(videos)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -70,15 +70,16 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            videos, targets, video_lengths = data
+            videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = model(videos, video_lengths)
+            outputs = model(videos)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
             
+            # max pool over time
             _, predicted_indexes = torch.max(outputs.data, 1)
             
             # bin predictions into confusion matrix

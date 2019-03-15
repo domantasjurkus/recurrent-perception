@@ -19,9 +19,13 @@ def get_feature_extractor():
         nn.MaxPool2d(kernel_size=3, stride=2),
     )
 
-class LSTMSnippet(nn.Module):
-    def __init__(self, n_classes=5, n_visual_features=576, lstm_hidden_size=128, device='cpu'):
-        super(LSTMSnippet, self).__init__()
+class LSTMSlidingWindow(nn.Module):
+    def __init__(self, n_classes=5, n_visual_features=576, lstm_hidden_size=128, fps=6, device='cpu'):
+        super(LSTMSlidingWindow, self).__init__()
+        self.device = device
+        self.fps = fps
+        self.lstm_hidden_size = lstm_hidden_size
+        
         self.feature_extractor = get_feature_extractor()
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         
@@ -29,6 +33,12 @@ class LSTMSnippet(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
         self.criterion = nn.NLLLoss()
         self.device = device
+
+    def init_hidden_and_cell(self):
+        # hard-coded batch size of 1
+        h0 = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
+        c0 = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
+        return (h0, c0)
 
     def get_classes(self, classifier_output, method=1):
         if method == 1:
@@ -61,18 +71,22 @@ class LSTMSnippet(nn.Module):
         
         raise Exception()
 
-    def forward(self, x):
-        batch, timesteps, c, h, w = x.size()
-        c_in = x.view(batch*timesteps, c, h, w)
+    def forward(self, video):
+        batch, timesteps, c, h, w = video.size()
+        c_in = video.view(batch*timesteps, c, h, w)
         c_out = self.feature_extractor(c_in)
+        c_out = c_out.view(batch, timesteps, -1)
 
-        r_in = c_out.view(batch, timesteps, -1)
-        
-        output, _ = self.lstm(r_in)
-        classifier_output = self.classifier(output[:, :, :])
-        
-        # pick 1 of 4 interpretations methods
-        classes = self.get_classes(classifier_output, method=3)
+        hc = self.init_hidden_and_cell()
+
+        # slide window with stride 1
+        for i in range(self.fps, timesteps+1):
+            feature_sequence = c_out[:, i-self.fps:i, :]
+            lstm_out, hc = self.lstm(feature_sequence, hc)
+            classifier_out = self.classifier(lstm_out[:, :, :])
+
+            # pick 1 of 4 interpretations methods
+            classes = self.get_classes(classifier_out, method=1)
 
         softmax = F.log_softmax(classes, dim=1)
         return softmax

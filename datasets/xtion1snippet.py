@@ -16,18 +16,34 @@ class Xtion1SnippetDataset(Dataset):
         self.classes = os.listdir(self.root)
         self.sequence_filepaths = []
         self.labels = []
+        self.fps = frames_per_sequence
 
+        # no stride
+        # for c in self.classes:
+        #     class_filepath = os.path.join(self.root, c)
+        #     for move_number in os.listdir(class_filepath):
+        #         move_filepath = os.path.join(class_filepath, move_number)
+        #         frames = sorted(os.listdir(move_filepath))
+        #         n_sequences = len(frames) // frames_per_sequence
+        #         for i in range(0, n_sequences):
+        #             sequence = frames[i*frames_per_sequence:(i+1)*frames_per_sequence]
+        #             sequence = append_move_filepath(move_filepath, sequence)
+        #             self.sequence_filepaths.append(sequence)
+        #             self.labels.append(self.classes.index(c))
+
+        # stride 1
         for c in self.classes:
             class_filepath = os.path.join(self.root, c)
             for move_number in os.listdir(class_filepath):
                 move_filepath = os.path.join(class_filepath, move_number)
                 frames = sorted(os.listdir(move_filepath))
-                n_sequences = len(frames) // frames_per_sequence
-                for i in range(0, n_sequences):
-                    sequence = frames[i*frames_per_sequence:(i+1)*frames_per_sequence]
+                
+                for i in range(0, len(frames) - self.fps):
+                    sequence = frames[i:i+frames_per_sequence]
                     sequence = append_move_filepath(move_filepath, sequence)
                     self.sequence_filepaths.append(sequence)
                     self.labels.append(self.classes.index(c))
+
 
         print("Total number of sequences:", len(self.sequence_filepaths))
 

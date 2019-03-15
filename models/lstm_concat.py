@@ -36,7 +36,7 @@ class LSTMConcat(nn.Module):
         self.pre_concat_features = get_pre_concat_features()
         self.post_concat_features = get_post_concat_features()
 
-        self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)        
+        self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         self.classifier = nn.Linear(256, self.n_classes)
         self.optimizer = optim.Adam(self.parameters(), lr=0.00005)
 
@@ -54,6 +54,37 @@ class LSTMConcat(nn.Module):
 
         post = post.view(batch, -1)
         return post
+    
+    def get_classes(self, classifier_output, method=1):
+        if method == 1:
+            # 1) return prediction from last LSTM output BAD BAD BAD
+
+            return classifier_output[:, -1, :]
+
+        if method == 2:
+            # 2) max-pool predictions over time
+            classes, _ = classifier_output.max(1)
+            return classes
+
+        if method == 3:
+            # 3) average over time
+            n_cells = classifier_output.shape[1]
+            classes = classifier_output.sum(dim=1) / n_cells
+            return classes
+
+        if method == 4:
+            # 4) weight by g
+            fps = classifier_output.shape[1]
+            if fps > 1:
+                g = torch.linspace(0, 1, fps, device=self.device)
+            else:
+                g = torch.tensor([1.], device=self.device)
+            g = g.view(1, g.shape[0], 1)
+            classifier_output = classifier_output * g
+            classes = classifier_output.sum(dim=1)
+            return classes
+        
+        raise Exception()
 
     # two ways to classify: look at the last LSTM cell
     # or aggregate probabilities over all cells
@@ -71,9 +102,11 @@ class LSTMConcat(nn.Module):
             sequence_features = self.features(sequence)
             feature_aggregate[:, i] = sequence_features
 
-        output, _ = self.lstm(feature_aggregate)
+        lstm_output, _ = self.lstm(feature_aggregate)
+        classifier_output = self.classifier(lstm_output[:, :, :])
                 
-        classes = self.classifier(output[:, -1, :]) # bad bad boy
+        # pick 1 of 4 interpretations methods
+        classes = self.get_classes(classifier_output, method=3)
 
         softmax = F.log_softmax(classes, dim=1)
         return softmax

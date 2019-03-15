@@ -39,9 +39,12 @@ class LSTMSingleshot(nn.Module):
         samples, timesteps, c, h, w = x.size()
         c_in = x.view(samples*timesteps, c, h, w)
 
+        # c_in = (50, 1, 480, 640)
+
         visual_features = self.feature_extractor(c_in)
         visual_features = visual_features.view(samples, timesteps, -1)
 
+        # (1, timesteps, 576)
         output, _ = self.lstm(visual_features)
 
         classes = self.classifier(output[:, output_cell, :])
