@@ -36,11 +36,12 @@ loader_train = torch.utils.data.DataLoader(dataset_train, **train_params)
 loader_test = torch.utils.data.DataLoader(dataset_test, **test_params)
 
 def get_model():
-    feature_extractor = SnippetConcat(n_classes=n_classes)
+    # feature_extractor = SnippetConcat(n_classes=n_classes)
     # feature_extractor.load_state_dict(torch.load('saved_models/snippetconcat_masked_epoch3_acc0.321016.pt'))
-    feature_extractor.to(device)
+    # feature_extractor.to(device)
 
-    model = LSTMConcat(feature_extractor, n_classes, frames_per_sequence=FRAMES_PER_SEQUENCE, device=device)
+    # model = LSTMConcat(feature_extractor, n_classes, frames_per_sequence=FRAMES_PER_SEQUENCE, device=device)
+    model = LSTMConcat(n_classes, frames_per_sequence=FRAMES_PER_SEQUENCE, device=device)
     return model
 
 model = get_model()

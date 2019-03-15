@@ -3,11 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-import sys
-import os
-sys.path.append(os.getcwd()+'/models')
-print(sys.path)
-
 def get_pre_concat_features():
     return nn.Sequential(
         nn.Conv2d(1, 12, kernel_size=11, stride=4),
