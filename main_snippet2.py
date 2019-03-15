@@ -2,8 +2,8 @@ import torch
 
 from datasets.xtion1video import Xtion1VideoDataset
 
-from models.cifar_based import CifarBased
-from models.lstm_snippet2 import LSTMSnippet2
+# from models.cifar_based import CifarBased
+from models.lstm_snippet import LSTMSnippet
 
 from train_test_video2 import *
 
@@ -42,14 +42,14 @@ def get_model():
     # feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
 
     # model = LSTMSnippet(feature_extractor.features, n_classes)
-    model = LSTMSnippet2(n_classes)
+    model = LSTMSnippet(n_classes, device=device)
     return model
 
 model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=50, save=False, masked=True, device=device)
     # train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device, fps=FRAMES_PER_SEQUENCE)
 
     # test(model, loader_keepaway, n_classes, 1, device=device)

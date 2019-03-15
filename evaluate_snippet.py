@@ -44,18 +44,20 @@ with torch.no_grad():
             sequence = video[:, start_index:end_index, :, :, :]
             
             outputs = model(sequence)
-            print(outputs)
+            # print(outputs)
             # print(outputs)
             bins += outputs
+            # print(bins)
 
             # _, predicted_index = torch.max(outputs, 1)
             # predicted_index = predicted_index.item()
             # bins[predicted_index] += 1
         
         max_val, max_idx = bins.max(1)
+        print(bins)
         predicted_id = max_idx.cpu().numpy()[0]
         # print(bins[0].cpu().numpy())
-        # print(predicted_id, end=" ")
+        # print(predicted_id)
 
         if label.item() == predicted_id:
             correct += 1

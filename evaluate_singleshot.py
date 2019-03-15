@@ -13,7 +13,7 @@ loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, num_workers
 
 def get_model():
     model = CifarBased(n_classes=5)
-    model.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
+    model.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.389031.pt'))
 
     return model
 
@@ -46,14 +46,16 @@ with torch.no_grad():
         #     # bins[predicted_index] += 1
 
         for video in batch:
+            print(video.shape)
             outputs = model(video)
+            print(outputs.shape)
             outputs = torch.exp(outputs)
             outputs = torch.sum(outputs, dim=0)
-            print(outputs)
+            # print(outputs)
             _, predicted_id = outputs.max(0)
-            print(predicted_id)
+            # print(predicted_id)
             predicted_id = predicted_id.cpu().numpy()
-            print(predicted_id)
+            # print(predicted_id)
 
             if label.item() == predicted_id:
                 correct += 1

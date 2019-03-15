@@ -7,6 +7,7 @@ from models.cifar_based import CifarBased
 from models.lstm_snippet import LSTMSnippet
 
 from train_test import *
+# from train_test_snippet import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
@@ -42,7 +43,7 @@ def get_model():
     # feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
 
     # model = LSTMSnippet(feature_extractor.features, n_classes)
-    model = LSTMSnippet(n_classes)
+    model = LSTMSnippet(n_classes, device=device)
     return model
 
 model = get_model()
@@ -50,3 +51,4 @@ model.to(device)
 
 if __name__ == '__main__':  
     train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device)
+    # train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, fps=FRAMES_PER_SEQUENCE, device=device)

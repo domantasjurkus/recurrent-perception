@@ -70,19 +70,19 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            images, targets = data
-            images, targets = images.to(device, dtype=torch.float), targets.to(device)
+            inputs, targets = data
+            inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = model(images)
+            outputs = model(inputs)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
-            
+
             _, predicted_indexes = torch.max(outputs.data, 1)
             
             # bin predictions into confusion matrix
-            for j in range(len(images)):
+            for j in range(len(inputs)):
                 actual = targets[j].item()
                 predicted = predicted_indexes[j].item()
                 confusion[actual][predicted] += 1
