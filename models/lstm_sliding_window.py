@@ -83,10 +83,12 @@ class LSTMSlidingWindow(nn.Module):
         for i in range(self.fps, timesteps+1):
             feature_sequence = c_out[:, i-self.fps:i, :]
             lstm_out, hc = self.lstm(feature_sequence, hc)
-            classifier_out = self.classifier(lstm_out[:, :, :])
-
-            # pick 1 of 4 interpretations methods
-            classes = self.get_classes(classifier_out, method=3)
         
+        # fully-connect last LSTM block (will experiment with classifying earlier blocks to make early predictions)
+        classifier_out = self.classifier(lstm_out[:, :, :])
+
+        # pick 1 of 4 interpretations methods (method 3 = average over time)
+        classes = self.get_classes(classifier_out, method=3)
+
         softmax = F.log_softmax(classes, dim=1)
         return softmax
