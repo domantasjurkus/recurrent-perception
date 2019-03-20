@@ -86,7 +86,7 @@ class LSTMSlidingWindow(nn.Module):
             classifier_out = self.classifier(lstm_out[:, :, :])
 
             # pick 1 of 4 interpretations methods
-            classes = self.get_classes(classifier_out, method=1)
-
+            classes = self.get_classes(classifier_out, method=3)
+        
         softmax = F.log_softmax(classes, dim=1)
         return softmax
