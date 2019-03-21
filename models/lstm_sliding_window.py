@@ -30,6 +30,8 @@ class LSTMSlidingWindow(nn.Module):
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         
         self.classifier = nn.Linear(128, n_classes)
+        # add another linear layer
+        
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
         self.criterion = nn.NLLLoss()
         self.device = device
@@ -84,11 +86,15 @@ class LSTMSlidingWindow(nn.Module):
             feature_sequence = c_out[:, i-self.fps:i, :]
             lstm_out, hc = self.lstm(feature_sequence, hc)
         
-        # fully-connect last LSTM block (will experiment with classifying earlier blocks to make early predictions)
-        classifier_out = self.classifier(lstm_out[:, :, :])
+            classifier_out = self.classifier(lstm_out[:, :, :])
+            # classifier_out.shape = (batch=1. timesteps=variable, hidden_dim=128)
 
-        # pick 1 of 4 interpretations methods (method 3 = average over time)
-        classes = self.get_classes(classifier_out, method=3)
+            # pick 1 of 4 interpretations methods
+            classes = self.get_classes(classifier_out, method=3)
 
-        softmax = F.log_softmax(classes, dim=1)
-        return softmax
+            log_softmax = F.log_softmax(classes, dim=1)
+            # softmax = F.softmax(log_softmax)
+            # print(softmax)
+
+        # results from last LSTM block
+        return log_softmax

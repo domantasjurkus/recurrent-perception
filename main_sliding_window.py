@@ -1,10 +1,13 @@
 import torch
 
 from datasets.xtion1video import Xtion1VideoDataset
-
 from models.lstm_sliding_window import LSTMSlidingWindow
+from train_test_sliding_window import *
 
-from train_test_video import *
+# https://pytorch.org/docs/stable/notes/randomness.html
+torch.manual_seed(1337)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
@@ -47,7 +50,7 @@ model = get_model()
 model.to(device)
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=50, save=False, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=50, save=True, masked=True, device=device)
     # train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device, fps=FRAMES_PER_SEQUENCE)
 
     # test(model, loader_keepaway, n_classes, 1, device=device)

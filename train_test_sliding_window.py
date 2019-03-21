@@ -73,6 +73,7 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
             videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
 
+            # TODO: feed portions of the video and check accuracy
             outputs = model(videos)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
