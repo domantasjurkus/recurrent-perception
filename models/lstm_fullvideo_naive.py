@@ -28,10 +28,9 @@ def init_hidden_and_cell(hidden_size=128, device="cuda:0"):
     c0 = torch.zeros(1, 1, hidden_size, device=device)
     return (h0, c0)
 
-class LSTMSingleshot(nn.Module):
-    # def __init__(self, feature_extractor, n_classes, n_visual_features=576, lstm_hidden_size=128):
-    def __init__(self, n_classes, n_visual_features=576, lstm_hidden_size=128):
-        super(LSTMSingleshot, self).__init__()
+class LSTMFullVideoNaive(nn.Module):
+    def __init__(self, n_classes=5, n_visual_features=576, lstm_hidden_size=128):
+        super(LSTMFullVideoNaive, self).__init__()
         self.hc0 = init_hidden_and_cell()
 
         self.feature_extractor = get_feature_extractor()
@@ -42,14 +41,15 @@ class LSTMSingleshot(nn.Module):
 
         self.criterion = nn.NLLLoss()
 
-    def forward(self, x, output_cell=-1):
-        samples, timesteps, c, h, w = x.size()
-        c_in = x.view(samples*timesteps, c, h, w)
+    def forward(self, video, output_cell=-1):
+        # batch always 1
+        batch, timesteps, c, h, w = video.size()
+        c_in = video.view(batch*timesteps, c, h, w)
 
         # c_in = (50, 1, 480, 640)
 
         visual_features = self.feature_extractor(c_in)
-        visual_features = visual_features.view(samples, timesteps, -1)
+        visual_features = visual_features.view(batch, timesteps, -1)
 
         # (1, timesteps, 576)
         
