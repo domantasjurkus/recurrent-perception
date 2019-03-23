@@ -1,11 +1,20 @@
-import torch
 import numpy as np
+import torch
+import torch.nn.functional as F
 
 training_losses = []
 testing_losses = []
 accuracies = []
 
-def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu"):
+STRIDE = 3
+
+def init_hidden_and_cell(hidden_size=128, device="cpu"):
+    # hard-coded batch size of 1
+    h0 = torch.zeros(1, 1, hidden_size, device=device)
+    c0 = torch.zeros(1, 1, hidden_size, device=device)
+    return (h0, c0)
+
+def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, hidden_size=128, fps=6, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
     print("device:", device)
@@ -22,14 +31,24 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
 
-            outputs = model(videos)
+            batch, timesteps, _, _, _ = videos.size()
 
-            loss = model.criterion(outputs, targets)
-            loss.backward()
-            model.optimizer.step()
+            hc = init_hidden_and_cell(hidden_size, device)
 
-            total_loss += loss.item()
-            running_loss += loss.item()
+            # slide window with STRIDE
+            for i in range(fps, timesteps+1, STRIDE):
+                feature_sequence = videos[:, i-fps:i, :]
+                outputs, hc = model(feature_sequence, hc)
+                hc = (hc[0].detach(), hc[1].detach())
+
+                # backpropagate for each snippet
+                loss = model.criterion(outputs, targets)
+                # loss.backward(retain_graph=True)
+                loss.backward()
+                model.optimizer.step()
+
+                total_loss += loss.item()
+                running_loss += loss.item()
 
             if i % 5 == 0:
                 print('epoch: %d minibatches: %d/%d loss: %.3f' % (epoch, i, minibatch_count, running_loss))
@@ -54,7 +73,7 @@ def save_model(model, masked, epoch, acc):
     torch.save(model.state_dict(), "saved_models/%s_%s_epoch%d_acc%f.pt" % (model_name, is_masked, epoch, acc))
     print("model saved")
 
-def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
+def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, fps=6, device="cpu"):
     model.eval()
     correct = 0
     total = 0
@@ -73,15 +92,30 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
             videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
 
-            # TODO: feed portions of the video and check accuracy
-            outputs = model(videos)
+            batch, timesteps, _, _, _ = videos.size()
 
-            loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
-            total_loss += loss.item()
-            running_loss += loss.item()
-            
+            hc = init_hidden_and_cell(device=device)
+            prediction_bins = torch.zeros([1, n_classes], device=device)
+
+            # slide window with STRIDE
+            for i in range(fps, timesteps+1, STRIDE):
+                feature_sequence = videos[:, i-fps:i, :]
+                outputs, hc = model(feature_sequence, hc)
+
+                softmax_predictions = F.softmax(outputs, dim=1)
+                prediction_bins += softmax_predictions
+
+                # backpropagate for each snippet
+                loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
+
+                total_loss += loss.item()
+                running_loss += loss.item()
+
+            #TODO: extend with accuracy metric (correctly classified snippets / number of snippets)
+            #TODO: the same for single shot, but correctly classified frames/ number of frames
+
             # pick index with max activation value
-            _, predicted_indexes = torch.max(outputs.data, 1)
+            _, predicted_indexes = torch.max(prediction_bins.data, 1)
             
             # bin predictions into confusion matrix
             for j in range(len(videos)):

@@ -6,6 +6,8 @@ training_losses = []
 testing_losses = []
 accuracies = []
 
+# unused I think
+
 def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu", fps=6):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)

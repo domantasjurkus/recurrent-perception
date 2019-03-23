@@ -36,12 +36,6 @@ class LSTMSlidingWindow(nn.Module):
         self.criterion = nn.NLLLoss()
         self.device = device
 
-    def init_hidden_and_cell(self):
-        # hard-coded batch size of 1
-        h0 = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
-        c0 = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
-        return (h0, c0)
-
     def get_classes(self, classifier_output, method=1):
         if method == 1:
             # 1) return prediction from last LSTM output BAD BAD BAD
@@ -73,28 +67,20 @@ class LSTMSlidingWindow(nn.Module):
         
         raise Exception()
 
-    def forward(self, video):
-        batch, timesteps, c, h, w = video.size()
-        c_in = video.view(batch*timesteps, c, h, w)
+    def forward(self, snippet, hc):
+        batch, timesteps, c, h, w = snippet.size()
+        c_in = snippet.view(batch*timesteps, c, h, w)
         c_out = self.feature_extractor(c_in)
         c_out = c_out.view(batch, timesteps, -1)
-
-        hc = self.init_hidden_and_cell()
-
-        # slide window with stride 1
-        for i in range(self.fps, timesteps+1):
-            feature_sequence = c_out[:, i-self.fps:i, :]
-            lstm_out, hc = self.lstm(feature_sequence, hc)
         
-            classifier_out = self.classifier(lstm_out[:, :, :])
-            # classifier_out.shape = (batch=1. timesteps=variable, hidden_dim=128)
+        lstm_out, hc = self.lstm(c_out, hc)
+        
+        classifier_out = self.classifier(lstm_out[:, :, :])
+        # classifier_out.shape = (batch=1. timesteps=variable, hidden_dim=128)
 
-            # pick 1 of 4 interpretations methods
-            classes = self.get_classes(classifier_out, method=3)
+        # pick 1 of 4 interpretations methods
+        classes = self.get_classes(classifier_out, method=3)
 
-            log_softmax = F.log_softmax(classes, dim=1)
-            # softmax = F.softmax(log_softmax)
-            # print(softmax)
+        log_softmax = F.log_softmax(classes, dim=1)
 
-        # results from last LSTM block
-        return log_softmax
+        return log_softmax, hc

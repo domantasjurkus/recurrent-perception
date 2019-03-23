@@ -17,18 +17,24 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         running_loss = 0.0
 
         for i, data in enumerate(train_loader):
-            inputs, targets = data
-            inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
+            batch, targets, _ = data
+            batch, targets = batch.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
 
-            outputs = model(inputs)
+            for video in batch:
+                timesteps, _, _, _ = video.shape
+                # video.shape = (timesteps, channels=1, h, w)
+                # multiple timesteps will be processed in parallel
+                outputs = model(video)
 
-            loss = model.criterion(outputs, targets)
-            loss.backward()
-            model.optimizer.step()
+                targets = targets.repeat(timesteps)
 
-            total_loss += loss.item()
-            running_loss += loss.item()
+                loss = model.criterion(outputs, targets)
+                loss.backward()
+                model.optimizer.step()
+
+                total_loss += loss.item()
+                running_loss += loss.item()
 
             if i % 5 == 0:
                 print('epoch: %d minibatches: %d/%d loss: %.3f' % (epoch, i, minibatch_count, running_loss))
@@ -70,34 +76,38 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            inputs, targets = data
-            inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device)
+            batch, targets, _ = data
+            batch, targets = batch.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = model(inputs)
+            for video in batch:
+                timesteps, _, _, _ = video.shape
+                outputs = model(video)
 
-            loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
-            total_loss += loss.item()
-            running_loss += loss.item()
+                targets = targets.repeat(timesteps)
 
-            _, predicted_indexes = torch.max(outputs.data, 1)
-            
-            # bin predictions into confusion matrix
-            for j in range(len(inputs)):
-                actual = targets[j].item()
-                predicted = predicted_indexes[j].item()
-                confusion[actual][predicted] += 1
+                loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
+                total_loss += loss.item()
+                running_loss += loss.item()
 
-            # sum up total correct
-            batch_size = targets.size(0)
-            total += batch_size
-            correct_vector = (predicted_indexes == targets)
-            correct += correct_vector.sum().item()
-            
-            # sum up per-class correct
-            for j in range(len(targets)):
-                target = targets[j]
-                class_correct[target] += correct_vector[j].item()
-                class_total[target] += 1
+                _, predicted_indexes = torch.max(outputs.data, 1)
+                
+                # bin predictions into confusion matrix
+                for j in range(predicted_indexes.shape[0]):
+                    actual = targets[j].item()
+                    predicted = predicted_indexes[j].item()
+                    confusion[actual][predicted] += 1
+
+                # sum up total correct
+                batch_size = targets.size(0)
+                total += batch_size
+                correct_vector = (predicted_indexes == targets)
+                correct += correct_vector.sum().item()
+                
+                # sum up per-class correct
+                for j in range(len(targets)):
+                    target = targets[j]
+                    class_correct[target] += correct_vector[j].item()
+                    class_total[target] += 1
 
             if i % 5 == 0:
                 print('minibatches: %d/%d running loss: %.3f' % (i, minibatch_count, running_loss))
