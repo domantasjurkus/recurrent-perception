@@ -8,7 +8,6 @@ torch.manual_seed(1337)
 from datasets.xtion1video import Xtion1VideoDataset
 from models.cifar_based import CifarBased
 from models.lstm_fullvideo_naive import LSTMFullVideoNaive
-from train_test_video import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
@@ -64,9 +63,18 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         for i, data in enumerate(train_loader):
             videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
+            batchsize, timesteps, _, _, _ = videos.shape
             model.optimizer.zero_grad()
 
             outputs = model(videos)
+
+            # last cell
+            outputs = outputs[:, -1, :]
+
+            # test: instead of backpropagating on the last cell only,
+            # repeat the target tensor so that we backpropagate through all cells
+            # targets.unsqueeze_(0)
+            # targets = targets.repeat(1, timesteps)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -81,6 +89,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         
         training_losses.append(total_loss)
         acc = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        test_per_frame(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
         if save:
@@ -119,6 +128,9 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
 
             outputs = model(videos)
 
+            # last cell for full video prediction
+            outputs = outputs[:, -1, :]
+
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
@@ -143,6 +155,82 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
                 target = targets[j]
                 class_correct[target] += correct_vector[j].item()
                 class_total[target] += 1
+
+            if i % 5 == 0:
+                print('minibatches: %d/%d running loss: %.3f' % (i, minibatch_count, running_loss))
+                running_loss = 0.0
+        
+        testing_losses.append(total_loss)
+
+    print('Total test samples: ', class_total)
+    print('Correct predictions:', class_correct)
+    acc = correct / total
+    accuracies.append(acc)
+    print('Test accuracy: %f' % acc)
+    print('Per-class accuracy:', np.asarray(class_correct)/np.asarray(class_total))
+    print(confusion)
+    print('Total testing loss:', total_loss)
+    return acc
+
+# 
+# redundant function to emit per-frame predictions
+# 
+def test_per_frame(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
+    model.eval()
+    correct = 0
+    total = 0
+    class_correct = [0]*n_classes
+    class_total = [0]*n_classes
+
+    running_loss = 0.0
+    total_loss = 0.0
+    confusion = torch.zeros([n_classes, n_classes], dtype=torch.int) # (class, guess)
+
+    minibatch_count = len(test_loader)
+    print('testing minibatch count:', minibatch_count)
+
+    with torch.no_grad():
+        for i, data in enumerate(test_loader):
+            videos, targets, _ = data
+            videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
+
+            # 
+            # instead onf classifying the whole video, classify frames
+            # 
+            batch_outputs = model(videos)
+
+            # last cell again
+            loss = model.criterion(batch_outputs[:, -1, :], targets) * TEST_LOSS_MULTIPLY
+            total_loss += loss.item()
+            running_loss += loss.item()
+
+            # get rid of batch
+            batch_outputs.squeeze_(0)
+            
+            # for each frame in video
+            # for frame_outputs in batch_outputs:
+            for i in range(batch_outputs.shape[0]):
+                # pick index with max activation value
+                _, predicted_indices = torch.max(batch_outputs[i,:].data, 0)
+                predicted_indices.unsqueeze_(0)
+                
+                # bin predictions into confusion matrix
+                for j in range(len(videos)):
+                    actual = targets[j].item()
+                    predicted = predicted_indices[j].item()
+                    confusion[actual][predicted] += 1
+
+                # sum up total correct
+                batch_size = targets.size(0)
+                total += batch_size
+                correct_vector = (predicted_indices == targets)
+                correct += correct_vector.sum().item()
+                
+                # sum up per-class correct
+                for j in range(len(targets)):
+                    target = targets[j]
+                    class_correct[target] += correct_vector[j].item()
+                    class_total[target] += 1
 
             if i % 5 == 0:
                 print('minibatches: %d/%d running loss: %.3f' % (i, minibatch_count, running_loss))

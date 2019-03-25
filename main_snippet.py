@@ -6,7 +6,7 @@ from datasets.xtion1video import Xtion1VideoDataset
 from models.cifar_based import CifarBased
 from models.lstm_snippet import LSTMSnippet
 
-from train_test import *
+from train_test_snippet import *
 # from train_test_snippet import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -39,10 +39,6 @@ loader_train = torch.utils.data.DataLoader(dataset_train, **train_params)
 loader_test = torch.utils.data.DataLoader(dataset_test, **test_params)
 
 def get_model():
-    # feature_extractor = CifarBased(n_classes=n_classes)
-    # feature_extractor.load_state_dict(torch.load('saved_models/cifarbased_masked_epoch3_acc0.372212.pt'))
-
-    # model = LSTMSnippet(feature_extractor.features, n_classes)
     model = LSTMSnippet(n_classes, device=device)
     return model
 

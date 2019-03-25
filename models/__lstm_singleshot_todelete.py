@@ -22,35 +22,34 @@ def get_feature_extractor():
         nn.MaxPool2d(kernel_size=3, stride=2),
     )
 
-def init_hidden_and_cell(hidden_size=128, device="cuda:0"):
-    # hard-coded batch size of 1
-    h0 = torch.zeros(1, 1, hidden_size, device=device)
-    c0 = torch.zeros(1, 1, hidden_size, device=device)
-    return (h0, c0)
-
-class LSTMFullVideoNaive(nn.Module):
+class LSTMSingleshot(nn.Module):
     def __init__(self, n_classes=5, n_visual_features=576, lstm_hidden_size=128):
-        super(LSTMFullVideoNaive, self).__init__()
-        self.hc0 = init_hidden_and_cell()
+        super(LSTMSingleshot, self).__init__()
+        self.n_classes = n_classes
 
         self.feature_extractor = get_feature_extractor()
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         
-        self.classifier = nn.Linear(128, n_classes)
+        self.classifier = nn.Linear(128, self.n_classes)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
 
         self.criterion = nn.NLLLoss()
 
-    def forward(self, video, output_cell=-1):
+    def forward(self, x, hc):
         # batch always 1
-        batch, timesteps, c, h, w = video.size()
-        c_in = video.view(batch*timesteps, c, h, w)
+        timesteps, c, h, w = x.size()
+        # c_in = x.view(timesteps, c, h, w)
+        # c_in = (variable, 1, 480, 640)
 
-        visual_features = self.feature_extractor(c_in)
-        visual_features = visual_features.view(batch, timesteps, -1)
+        visual_features = self.feature_extractor(x)
+        # flatten visual features (could also fully-connect here, but does not seem to make sense)
+        # hard-coded batch of 1
+        visual_features = visual_features.view(1, timesteps, -1)
+        
+        lstm_output, hc = self.lstm(visual_features, hc)
+        # lstm_output, _ = self.lstm(visual_features)
+        lstm_output = lstm_output.view(1, -1)
+        classes = self.classifier(lstm_output)
 
-        output, _ = self.lstm(visual_features, self.hc0)
-
-        classes = self.classifier(output[:, :, :])
         softmax = F.log_softmax(classes, dim=1)
-        return softmax
+        return softmax, hc

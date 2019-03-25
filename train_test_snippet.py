@@ -6,7 +6,7 @@ training_losses = []
 testing_losses = []
 accuracies = []
 
-def train(model, train_loader, test_loader, n_classes, epochs, masked, fps, save=False, device="cpu"):
+def train(model, train_loader, test_loader, n_classes, epochs, masked, fps=6, save=False, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
     print("device:", device)
@@ -23,7 +23,7 @@ def train(model, train_loader, test_loader, n_classes, epochs, masked, fps, save
             snippets, targets = snippets.to(device, dtype=torch.float), targets.to(device)
             model.optimizer.zero_grad()
 
-            outputs = get_outputs(model, snippets, targets, n_classes, fps, device)
+            outputs = model(snippets)
 
             loss = model.criterion(outputs, targets)
             loss.backward()
@@ -48,55 +48,6 @@ def train(model, train_loader, test_loader, n_classes, epochs, masked, fps, save
         print('Accuracies:', str(accuracies).replace(",", "").replace("[", "").replace("]", ""))
 
     print('Finished Training')
-
-def get_outputs(model, inputs, targets, n_classes, fps, device):
-    # split video, feed each snippet
-    # n_snippets = inputs.shape[1]
-
-    # hard-coded batch size of 1
-    # The output for each snippet:
-    # outputs = torch.zeros(n_snippets, n_classes, device=device)
-
-    # linearly weight the predictions over time as in:
-    # https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Ng_Beyond_Short_Snippets_2015_CVPR_paper.pdf
-    # if n_snippets > 1:
-        # g = torch.linspace(0, 1, n_snippets, device=device)
-    # else:
-        # g = torch.tensor([1])
-    g = torch.linspace(0, 1, fps, device=device)
-
-    # unstrided
-    # for i in range(0,n_snippets):
-    #     start = i*fps
-    #     end = (i+1)*fps
-    #     lstm_outputs = model(inputs[:,start:end,:,:,:])
-    #     lstm_outputs = get_snippet_prediction(lstm_outputs, g[i])
-    #     outputs[i] = lstm_outputs
-
-    lstm_outputs = model(inputs)
-    outputs = get_snippet_prediction(lstm_outputs, g)
-    
-    return outputs
-
-def get_snippet_prediction(lstm_outputs, g_at_i):
-    # We need to choose 1 of 4 methods for interpreting the LSTM output:
-    # 1) return prediction of the last time step
-    # 2) max-pool predictions over time
-    # 3) sum predictions over time and pick the maximum one
-    # 4) linearly weight and sum
-    lstm_outputs = lstm_outputs[:, -1, :]
-
-    # 2) max-pool predictions over time (does not make sense to me, does not give results either)
-    # lstm_outputs, _ = lstm_outputs.max(1)
-
-    # 3) aggregate (just sum up)
-    # lstm_outputs = lstm_outputs.sum(dim=1)
-
-    # 4) linearly weight outputs and sum
-    # lstm_outputs = lstm_outputs * g_at_i
-    # lstm_outputs = lstm_outputs.sum(dim=1)
-
-    return lstm_outputs
 
 def save_model(model, masked, epoch, acc):
     model_name = type(model).__name__.lower()
@@ -123,13 +74,11 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu", fps=6)
             snippets, targets = data
             snippets, targets = snippets.to(device, dtype=torch.float), targets.to(device)
 
-            outputs = get_outputs(model, snippets, targets, n_classes, fps, device)
+            outputs = model(snippets)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
-
-            # targets = torch.tensor([targets[0]])
             
             # pick prediction for each snippet that has the highest activation
             _, predicted_snippet_indexes = torch.max(outputs.data, 1)

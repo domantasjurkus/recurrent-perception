@@ -26,11 +26,11 @@ class CifarBased(nn.Module):
         self.features = get_feature_extractor()
 
         self.classifier = nn.Linear(576, self.n_classes)
-        self.optimizer = optim.Adam(self.parameters())
+        self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
         self.criterion = nn.NLLLoss()
 
-    def forward(self, x):
-        features = self.features(x)
+    def forward(self, batch):
+        features = self.features(batch)
         features = features.view(features.size(0), -1)
         classes = self.classifier(features)
         softmax = F.log_softmax(classes, dim=1)
