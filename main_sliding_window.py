@@ -3,11 +3,15 @@ import numpy as np
 
 from datasets.xtion1video import Xtion1VideoDataset
 from models.lstm_sliding_window import LSTMSlidingWindow
-# from train_test_video import *
+
+# for reproducibility
+# https://pytorch.org/docs/stable/notes/randomness.html
+torch.manual_seed(1337)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(1337)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
-print(device)
 
 BATCH_SIZE = 1
 FRAMES_PER_SEQUENCE = 6

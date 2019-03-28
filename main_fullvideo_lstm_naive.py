@@ -2,16 +2,18 @@ import torch
 import random
 import numpy as np
 
-random.seed(1337)
-torch.manual_seed(1337)
-
 from datasets.xtion1video import Xtion1VideoDataset
 from models.cifar_based import CifarBased
 from models.lstm_fullvideo_naive import LSTMFullVideoNaive
 
+# for reproducibility
+# https://pytorch.org/docs/stable/notes/randomness.html
+torch.manual_seed(1337)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(1337)
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
-print(device)
 
 BATCH_SIZE = 1
 SHUFFLE = True
@@ -22,20 +24,8 @@ n_classes = len(classes)
 dataset_train = Xtion1VideoDataset(root='../project-data/continuous_masked')
 dataset_test = Xtion1VideoDataset(root='../project-data/continuous_masked_test')
 
-train_params = {
-    "batch_size": BATCH_SIZE,
-    "num_workers": 8,
-    "shuffle": True,
-}
-
-test_params = {
-    "batch_size": BATCH_SIZE,
-    "num_workers": 8,
-    "shuffle": True,
-}
-
-loader_train = torch.utils.data.DataLoader(dataset_train, **train_params)
-loader_test = torch.utils.data.DataLoader(dataset_test, **test_params)
+loader_train = torch.utils.data.DataLoader(dataset_train, batch_size=BATCH_SIZE, num_workers=8, shuffle=True)
+loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=BATCH_SIZE, num_workers=8, shuffle=True)
 
 def get_model():
     model = LSTMFullVideoNaive()
