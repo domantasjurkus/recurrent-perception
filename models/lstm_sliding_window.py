@@ -25,12 +25,17 @@ class LSTMSlidingWindow(nn.Module):
         self.device = device
         self.fps = fps
         self.lstm_hidden_size = lstm_hidden_size
+        self.n_visual_features = n_visual_features
         
         self.feature_extractor = get_feature_extractor()
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
         
+        # self.classifier = nn.Sequential(
+        #     nn.Linear(128, 64),
+        #     nn.Dropout(p=0.25),
+        #     nn.Linear(64, n_classes)
+        # )
         self.classifier = nn.Linear(128, n_classes)
-        # add another linear layer
         
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
         self.criterion = nn.NLLLoss()
@@ -69,17 +74,18 @@ class LSTMSlidingWindow(nn.Module):
 
     def forward(self, snippet, hc):
         batch, timesteps, c, h, w = snippet.size()
+
         c_in = snippet.view(batch*timesteps, c, h, w)
         c_out = self.feature_extractor(c_in)
-        c_out = c_out.view(batch, timesteps, -1)
+        c_out = c_out.view(batch, timesteps, self.n_visual_features)
         
         lstm_out, hc = self.lstm(c_out, hc)
         
         classifier_out = self.classifier(lstm_out[:, :, :])
         # classifier_out.shape = (batch=1. timesteps=variable, hidden_dim=128)
 
-        # pick 1 of 4 interpretations methods
-        classes = self.get_classes(classifier_out, method=3)
+        # pick 1 of 4 lstm output interpretations methods
+        classes = self.get_classes(classifier_out, method=1)
 
         log_softmax = F.log_softmax(classes, dim=1)
 

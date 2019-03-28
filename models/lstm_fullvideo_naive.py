@@ -35,6 +35,7 @@ class LSTMFullVideoNaive(nn.Module):
 
         self.feature_extractor = get_feature_extractor()
         self.lstm = nn.LSTM(input_size=n_visual_features, hidden_size=lstm_hidden_size, num_layers=1, batch_first=True)
+        self.dropout = nn.Dropout(p=0.5)
         
         self.classifier = nn.Linear(128, n_classes)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
@@ -50,6 +51,7 @@ class LSTMFullVideoNaive(nn.Module):
         visual_features = visual_features.view(batch, timesteps, -1)
 
         output, _ = self.lstm(visual_features, self.hc0)
+        # output = self.dropout(output)
 
         classes = self.classifier(output[:, :, :])
         softmax = F.log_softmax(classes, dim=1)

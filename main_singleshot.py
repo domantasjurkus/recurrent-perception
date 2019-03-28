@@ -19,8 +19,11 @@ print("device:", device)
 MASKED = True
 BATCH_SIZE = 1
 
-ROOT_TRAIN = '../project-data/continuous_%s' % ("masked" if MASKED else "depth")
-ROOT_TEST = '../project-data/continuous_%s_test' % ("masked" if MASKED else "depth")
+# ROOT_TRAIN = '../project-data/continuous_%s' % ("masked" if MASKED else "depth")
+# ROOT_TEST = '../project-data/continuous_%s_test' % ("masked" if MASKED else "depth")
+ROOT_TRAIN = '../project-data/continuous_%s_resized' % ("masked" if MASKED else "depth")
+ROOT_TEST = '../project-data/continuous_%s_test_resized' % ("masked" if MASKED else "depth")
+
 
 classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
 n_classes = len(classes)
@@ -82,8 +85,8 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        # acccuracy = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
-        accuracy = test_video(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        acccuracy = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        # accuracy = test_video(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
         if save:

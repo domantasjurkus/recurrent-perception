@@ -48,6 +48,37 @@ training_losses = []
 testing_losses = []
 accuracies = []
 
+def model_outputs_to_classes(classifier_output, method=1):
+    if method == 1:
+        # 1) return prediction from last LSTM output BAD BAD BAD
+        return classifier_output[:, -1, :]
+
+    if method == 2:
+        # 2) max-pool predictions over time
+        classes, _ = classifier_output.max(1)
+        return classes
+
+    if method == 3:
+        # 3) average over time
+        n_cells = classifier_output.shape[1]
+        classes = classifier_output.sum(dim=1) / n_cells
+        return classes
+
+    if method == 4:
+        # 4) weight by g
+        fps = classifier_output.shape[1]
+        if fps > 1:
+            g = torch.linspace(0, 1, fps, device=self.device)
+        else:
+            g = torch.tensor([1.], device=self.device)
+        g = g.view(1, g.shape[0], 1)
+
+        classifier_output = classifier_output * g
+        classes = classifier_output.sum(dim=1)
+        return classes
+    
+    raise Exception()
+
 def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, save=False, device="cpu"):
     minibatch_count = len(train_loader)
     print('training minibatch count:', minibatch_count)
@@ -65,11 +96,13 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
             batchsize, timesteps, _, _, _ = videos.shape
             model.optimizer.zero_grad()
-
+            
+            # outputs = model(videos)
+            # train on only the last frame
+            # videos = videos[:, -5:-1, :]
             outputs = model(videos)
 
-            # last cell
-            outputs = outputs[:, -1, :]
+            outputs = model_outputs_to_classes(outputs, method=1)
 
             # test: instead of backpropagating on the last cell only,
             # repeat the target tensor so that we backpropagate through all cells
@@ -89,7 +122,7 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=False, 
         
         training_losses.append(total_loss)
         acc = test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
-        test_per_frame(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
+        # test_per_frame(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device)
         print('Total training loss:', total_loss)
 
         if save:
@@ -125,33 +158,33 @@ def test(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cpu"):
         for i, data in enumerate(test_loader):
             videos, targets, _ = data
             videos, targets = videos.to(device, dtype=torch.float), targets.to(device)
+            batch_size, timesteps, _, _, _ = videos.shape
 
+            # videos = videos[:,-4:-1]
             outputs = model(videos)
 
-            # last cell for full video prediction
-            outputs = outputs[:, -1, :]
+            outputs = model_outputs_to_classes(outputs, method=1)
 
             loss = model.criterion(outputs, targets) * TEST_LOSS_MULTIPLY
             total_loss += loss.item()
             running_loss += loss.item()
             
-            # pick index with max activation value
+            # pick index with max activation value to indicate class
             _, predicted_indexes = torch.max(outputs.data, 1)
             
             # bin predictions into confusion matrix
-            for j in range(len(videos)):
+            for j in range(batch_size):
                 actual = targets[j].item()
                 predicted = predicted_indexes[j].item()
                 confusion[actual][predicted] += 1
 
             # sum up total correct
-            batch_size = targets.size(0)
             total += batch_size
             correct_vector = (predicted_indexes == targets)
             correct += correct_vector.sum().item()
             
             # sum up per-class correct
-            for j in range(len(targets)):
+            for j in range(batch_size):
                 target = targets[j]
                 class_correct[target] += correct_vector[j].item()
                 class_total[target] += 1
@@ -249,6 +282,6 @@ def test_per_frame(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device="cp
     return acc
 
 if __name__ == '__main__':  
-    train(model, loader_train, loader_test, n_classes, epochs=100, save=False, masked=True, device=device)
+    train(model, loader_train, loader_test, n_classes, epochs=75, save=False, masked=True, device=device)
 
 

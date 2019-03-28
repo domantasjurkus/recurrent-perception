@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# for 640x480
 def get_feature_extractor():
     return nn.Sequential(
         nn.Conv2d(1, 12, kernel_size=11, stride=4),
@@ -72,7 +73,7 @@ class LSTMSnippet(nn.Module):
         classifier_output = self.classifier(output[:, :, :])
         
         # pick 1 of 4 interpretations methods
-        classes = self.get_classes(classifier_output, method=3)
+        classes = self.get_classes(classifier_output, method=4)
 
         softmax = F.log_softmax(classes, dim=1)
         return softmax
