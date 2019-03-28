@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+STRIDE = 6
+
 def get_feature_extractor():
     return nn.Sequential(
         nn.Conv2d(1, 12, kernel_size=11, stride=4),
@@ -80,13 +82,16 @@ class LSTMSlidingWindow(nn.Module):
         hc = self.init_hidden_and_cell()
 
         # slide window with stride 1
-        for i in range(self.fps, timesteps+1):
-            feature_sequence = c_out[:, i-self.fps:i, :]
+        for end in range(self.fps, timesteps+1, STRIDE):
+            start = end-self.fps
+            feature_sequence = c_out[:, start:end, :]
+
             lstm_out, hc = self.lstm(feature_sequence, hc)
             classifier_out = self.classifier(lstm_out[:, :, :])
 
             # pick 1 of 4 interpretations methods
             classes = self.get_classes(classifier_out, method=1)
 
+        # classify on the last block
         softmax = F.log_softmax(classes, dim=1)
         return softmax
