@@ -1,4 +1,4 @@
-## recurrect-perception-project
+## recurrect-perception
 This code accompanies my Msci project "Recurrent Perception For Deformable Object Recogniton"
 
 ## Running
