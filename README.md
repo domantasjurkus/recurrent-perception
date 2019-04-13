@@ -8,10 +8,8 @@ $ git clone ...
 $ conda create --name recurrent-perception --file requirements.txt
 ```
 
-2. Download the Continuous Perception dataset:
-```
-TODO
-```
+2. Download and unzip the Continuous Perception dataset (cleaned and prepped for training) into the project root:
+http://www.mediafire.com/file/0cfhjg16yphubud/recurrent-perception-dataset.zip/file
 
 3. Run the desired train/test script. All runnable scripts are prefixed with `main_`.
 Each script will train a model from scratch. No saved models are uploaded since the network should train pretty fast.
