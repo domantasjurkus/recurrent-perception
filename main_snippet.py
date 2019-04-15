@@ -6,7 +6,6 @@ from datasets.xtion1video import Xtion1VideoDataset
 from models.lstm_snippet import LSTMSnippet
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
 print(device)
 
 BATCH_SIZE = 1
@@ -18,13 +17,8 @@ STRIDE_TEST = 6
 classes = ('pant', 'shirt', 'sweater', 'towel', 'tshirt')
 n_classes = len(classes)
 
-TRAIN_ROOT = '../project-data/continuous_masked'
-TEST_ROOT = '../project-data/continuous_masked_test'
-# TRAIN_ROOT = '../project-data/continuous_masked_resized'
-# TEST_ROOT = '../project-data/continuous_masked_test_resized'
-
-dataset_train = Xtion1VideoDataset(root=TRAIN_ROOT)
-dataset_test = Xtion1VideoDataset(root=TEST_ROOT)
+dataset_train = Xtion1VideoDataset(root='data/continuous_masked')
+dataset_test = Xtion1VideoDataset(root='data/continuous_masked_test')
 
 train_params = {
     "batch_size": BATCH_SIZE,
@@ -87,8 +81,13 @@ def train(model, train_loader, test_loader, n_classes, epochs=10, masked=True, s
                 running_loss = 0.0
         
         training_losses.append(total_loss)
-        acc = test_snippet(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device, fps=fps)
-        # acc = test_video(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device, fps=fps)
+        
+        # test classifying snippets:
+        # acc = test_snippet(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device, fps=fps)
+
+        # test classifying video:
+        acc = test_video(model, test_loader, n_classes, TEST_LOSS_MULTIPLY, device=device, fps=fps)
+
         print('Total training loss:', total_loss)
 
         if save:

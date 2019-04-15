@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-# all_categories = ['pant', 'shirt', 'sweater', 'tshirt']
 all_categories = ['pant', 'shirt', 'sweater', 'towel', 'tshirt']
 
-confusion = np.array([[252.0, 124,  86,  81,   9],
-        [ 23, 236,  29, 119, 172],
-        [ 88, 164, 305,  40,  19],
-        [ 60,  92,  32, 215,  51],
-        [ 48, 253, 134,  47,  56]])
+confusion = np.array([
+[ 7.0,  0,  1,  2,  0],
+[ 0,  1,  0,  0,  9],
+[ 1,  0,  6,  1,  2],
+[ 0,  2,  0, 8,  0],
+[ 0,  1,  1,  1,  7]])
 
 def confusion_matrix(confusion):
     # Normalize by dividing every row by its sum

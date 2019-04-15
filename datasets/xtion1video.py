@@ -31,36 +31,19 @@ class Xtion1VideoDataset(Dataset):
 
         print("Total number of videos:", len(self.video_filepaths))
 
-        self.transform = torchvision.transforms.Compose([
-            torchvision.transforms.ToTensor(),
-        ])
-
     def __len__(self):
         return len(self.video_filepaths)
 
     def filepath_to_image(self, filepath):
         image = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-        image = image[None, :,:] # add channel dimension
-        # image = self.transform(image)
+        # add channel dimension
+        image = image[None, :,:]
         return image
 
     def __getitem__(self, index):
         video = self.video_filepaths[index]
         frames = list(map(self.filepath_to_image, video))
         frames = np.asarray(frames)
-
-        # padd with 0s
-        # video = torch.zeros((self.longest_video, 1, 480, 640))
-        # video[:len(frames)] = torch.Tensor(frames)
-        # video = torch.Tensor(video)
-
-        # Do not pad
         video = torch.Tensor(frames)
-
-        # repeat last frame throughout padded frames
-        # last_frame = video[len(frames)-1]
-        # for i in range(len(frames), self.longest_video):
-        #     video[i] = last_frame
-
         label = self.labels[index]
         return (video, label, len(frames))
