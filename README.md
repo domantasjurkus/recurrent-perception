@@ -2,16 +2,14 @@
 This code accompanies my Msci project "Recurrent Perception For Deformable Object Recogniton"
 
 ## Running
-1. Clone this repo, create a new Conda environment and install dependencies:
+1. Clone this repo, create a new Conda environment and install dependencies.
+The accompanied dataset will be pulled in `data/`
 ```
-$ git clone ...
+$ git clone https://github.com/domantasjurkus/recurrent-perception.git
 $ conda create --name recurrent-perception --file requirements.txt
 ```
 
-2. Download and unzip the Continuous Perception dataset (cleaned and prepped for training) into the project root:
-http://www.mediafire.com/file/0cfhjg16yphubud/recurrent-perception-dataset.zip/file
-
-3. Run the desired train/test script. All runnable scripts are prefixed with `main_`.
+2. Run the desired train/test script. All runnable scripts are prefixed with `main_`.
 Each script will train a model from scratch. No saved models are uploaded since the network should train pretty fast.
 The model for each script is denoted by name:
 ```
