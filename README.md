@@ -1,6 +1,8 @@
 ## recurrect-perception
 This code accompanies my Msci project "Recurrent Perception For Deformable Object Recogniton"
 
+![Move](/img/cpdataset.png?raw=true "Sample move")  
+
 ## Running
 1. Clone this repo, create a new Conda environment and install dependencies.
 The accompanying dataset will be pulled in `data/` (small enough to fit into git).
